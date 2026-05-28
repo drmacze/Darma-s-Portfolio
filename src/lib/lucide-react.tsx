@@ -24,6 +24,7 @@ export const ArrowUpRight = Shape;
 export const Code2 = Shape;
 export const Gauge = Shape;
 export const Github = Shape;
+export const GithubIcon = Shape;
 export const Layers3 = Shape;
 export const Mail = Shape;
 export const MousePointerClick = Shape;
