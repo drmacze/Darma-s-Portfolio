@@ -5,6 +5,7 @@ import { installAudioPolicy } from "./lib/audio-policy";
 import "./styles.css";
 import "./effects.css";
 import "./editorial-reset.css";
+import "./visual-theme.css";
 
 installAudioPolicy();
 
