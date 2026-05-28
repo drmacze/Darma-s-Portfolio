@@ -9,7 +9,6 @@ import {
 } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { animated, to, useSpring } from "@react-spring/web";
-import confetti from "canvas-confetti";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Lenis from "lenis";
@@ -21,7 +20,6 @@ import {
   GithubIcon,
   Layers3,
   Mail,
-  MousePointerClick,
   Orbit,
   Sparkles,
 } from "lucide-react";
@@ -38,7 +36,6 @@ import {
   techStack,
   toolLogos,
   visualPrinciples,
-  type Project,
   type VisualPrinciple,
 } from "./data/portfolio";
 
@@ -51,26 +48,29 @@ function useReducedMotionPreference() {
   }, []);
 }
 
-function fireBurst(element?: HTMLElement) {
-  const rect = element?.getBoundingClientRect();
+function registerInteraction(element?: HTMLElement) {
+  if (!element) return;
 
-  const origin = rect
-    ? {
-        x: (rect.left + rect.width / 2) / window.innerWidth,
-        y: (rect.top + rect.height / 2) / window.innerHeight,
-      }
-    : { x: 0.5, y: 0.5 };
-
-  confetti({
-    particleCount: 46,
-    spread: 58,
-    startVelocity: 36,
-    gravity: 0.82,
-    scalar: 0.72,
-    ticks: 110,
-    origin,
-    colors: ["#c6a76b", "#f4efe4", "#a98163", "#827b70"],
-  });
+  element.animate(
+    [
+      {
+        transform: "scale(1)",
+        filter: "brightness(1)",
+      },
+      {
+        transform: "scale(0.985)",
+        filter: "brightness(1.08)",
+      },
+      {
+        transform: "scale(1)",
+        filter: "brightness(1)",
+      },
+    ],
+    {
+      duration: 220,
+      easing: "cubic-bezier(0.16, 1, 0.3, 1)",
+    },
+  );
 }
 
 function ShaderBackdrop() {
@@ -91,7 +91,6 @@ function ShaderBackdrop() {
     const scene = new THREE.Scene();
     const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
     const geometry = new THREE.PlaneGeometry(2, 2, 1, 1);
-
     const mouseTarget = new THREE.Vector2(0.5, 0.5);
 
     const uniforms = {
@@ -119,7 +118,6 @@ function ShaderBackdrop() {
 
       renderer.setPixelRatio(pixelRatio);
       renderer.setSize(width, height, false);
-
       uniforms.uResolution.value.set(width * pixelRatio, height * pixelRatio);
     };
 
@@ -138,7 +136,6 @@ function ShaderBackdrop() {
       }
 
       uniforms.uMouse.value.lerp(mouseTarget, 0.075);
-
       renderer.render(scene, camera);
       frame = window.requestAnimationFrame(render);
     };
@@ -247,6 +244,7 @@ function AntigravityParticles() {
 
         if (distance < 180) {
           const force = (180 - distance) / 180;
+
           particle.vx += (dx / Math.max(distance, 1)) * force * 0.014;
           particle.vy += (dy / Math.max(distance, 1)) * force * 0.014;
         }
@@ -500,9 +498,7 @@ function MagneticButton({
       href={href}
       onMouseMove={handleMove}
       onMouseLeave={reset}
-      onClick={(event) => {
-        fireBurst(event.currentTarget);
-      }}
+      onClick={(event) => registerInteraction(event.currentTarget)}
       target={external ? "_blank" : undefined}
       rel={external ? "noreferrer" : undefined}
       style={{
@@ -539,7 +535,7 @@ function Navbar() {
         ))}
       </nav>
 
-      <span className="engine-badge">VFX ENGINE 0.5</span>
+      <span className="engine-badge">VFX ENGINE 0.6</span>
     </header>
   );
 }
@@ -721,6 +717,7 @@ function PrincipleIcon({ type }: { type: VisualPrinciple["icon"] }) {
   if (type === "layers") return <Layers3 />;
   if (type === "motion") return <Orbit />;
   if (type === "code") return <Code2 />;
+
   return <Gauge />;
 }
 
@@ -741,7 +738,7 @@ function About() {
             key={item.title}
             className="principle-card click-card"
             type="button"
-            onClick={(event) => fireBurst(event.currentTarget)}
+            onClick={(event) => registerInteraction(event.currentTarget)}
           >
             <span className="card-icon">
               <PrincipleIcon type={item.icon} />
@@ -817,7 +814,7 @@ function ProjectDeck() {
               type="button"
               onClick={(event) => {
                 setActiveIndex(index);
-                fireBurst(event.currentTarget);
+                registerInteraction(event.currentTarget);
               }}
             >
               <span>0{index + 1}</span>
@@ -958,7 +955,7 @@ function TechInspector() {
               className={`tech-button ${index === activeIndex ? "is-active" : ""}`}
               onClick={(event) => {
                 setActiveIndex(index);
-                fireBurst(event.currentTarget);
+                registerInteraction(event.currentTarget);
               }}
             >
               <img src={tool.icon} alt="" loading="lazy" />
@@ -1082,22 +1079,6 @@ function App() {
         <span>© 2026 {profile.name}</span>
         <span>Designed for {profile.brand}</span>
       </footer>
-
-      <button
-        className="floating-action"
-        type="button"
-        onClick={(event) => {
-          fireBurst(event.currentTarget);
-          window.scrollTo({
-            top: 0,
-            behavior: "smooth",
-          });
-        }}
-        aria-label="Back to top"
-      >
-        <MousePointerClick size={20} />
-        <span>Stage</span>
-      </button>
     </main>
   );
 }
