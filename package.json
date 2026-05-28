@@ -1,7 +1,7 @@
 {
   "name": "darma-dlavie-portfolio",
   "private": true,
-  "version": "0.3.1",
+  "version": "0.3.2",
   "type": "module",
   "engines": {
     "node": ">=20.0.0"
@@ -42,6 +42,7 @@
     "@types/three": "latest",
     "@vitejs/plugin-react": "latest",
     "typescript": "latest",
-    "vite": "latest"
+    "vite": "latest",
+    "vite-plugin-glsl": "latest"
   }
 }
