@@ -1,0 +1,3 @@
+Dlavie Portfolio automatic deployment trigger.
+Version: vfx-engine-0.4
+Purpose: force Vercel Git integration to rebuild the latest repository state.
