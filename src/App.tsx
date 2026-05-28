@@ -1,9 +1,31 @@
-import { type PointerEvent as ReactPointerEvent, useEffect, useMemo, useRef } from "react";
-import { motion } from "framer-motion";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+  type PointerEvent as ReactPointerEvent,
+  type ReactNode,
+} from "react";
+import { AnimatePresence, motion } from "framer-motion";
+import { animated, to, useSpring } from "@react-spring/web";
+import confetti from "canvas-confetti";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Lenis from "lenis";
 import * as THREE from "three";
+import {
+  ArrowUpRight,
+  Code2,
+  Gauge,
+  Github,
+  Layers3,
+  Mail,
+  MousePointerClick,
+  Orbit,
+  Sparkles,
+  Zap,
+} from "lucide-react";
 import {
   capabilities,
   experience,
@@ -26,6 +48,27 @@ function useReducedMotionPreference() {
   }, []);
 }
 
+function fireBurst(element?: HTMLElement) {
+  const rect = element?.getBoundingClientRect();
+  const origin = rect
+    ? {
+        x: (rect.left + rect.width / 2) / window.innerWidth,
+        y: (rect.top + rect.height / 2) / window.innerHeight,
+      }
+    : { x: 0.5, y: 0.5 };
+
+  confetti({
+    particleCount: 42,
+    spread: 54,
+    startVelocity: 36,
+    gravity: 0.82,
+    scalar: 0.72,
+    ticks: 110,
+    origin,
+    colors: ["#c6a76b", "#f4efe4", "#a98163", "#827b70"],
+  });
+}
+
 function ShaderBackdrop() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const reducedMotion = useReducedMotionPreference();
@@ -43,7 +86,8 @@ function ShaderBackdrop() {
 
     const scene = new THREE.Scene();
     const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
-    const geometry = new THREE.PlaneGeometry(2, 2, 64, 64);
+    const geometry = new THREE.PlaneGeometry(2, 2, 80, 80);
+
     const uniforms = {
       uTime: { value: 0 },
       uMouse: { value: new THREE.Vector2(0.5, 0.5) },
@@ -60,60 +104,73 @@ function ShaderBackdrop() {
 
         void main() {
           vUv = uv;
-          vec3 transformed = position;
-          transformed.z += sin((position.x + uTime * 0.14) * 3.4) * 0.012;
-          gl_Position = vec4(transformed, 1.0);
+          vec3 p = position;
+          p.z += sin((p.x + uTime * 0.18) * 4.0) * 0.014;
+          gl_Position = vec4(p, 1.0);
         }
       `,
       fragmentShader: `
         precision highp float;
+
         varying vec2 vUv;
         uniform float uTime;
         uniform vec2 uMouse;
         uniform vec2 uResolution;
 
-        float circle(vec2 uv, vec2 pos, float radius) {
-          return smoothstep(radius, radius - 0.36, distance(uv, pos));
+        float glow(vec2 uv, vec2 pos, float radius) {
+          float d = distance(uv, pos);
+          return smoothstep(radius, radius - 0.38, d);
         }
 
         void main() {
           vec2 uv = vUv;
           vec2 aspect = vec2(uResolution.x / max(uResolution.y, 1.0), 1.0);
           vec2 centered = (uv - 0.5) * aspect;
-          float drift = sin(uTime * 0.12) * 0.12;
 
-          float warm = circle(centered, vec2(-0.38 + drift, 0.16), 0.74);
-          float cool = circle(centered, vec2(0.44, -0.28 - drift), 0.68);
-          float cursor = circle(uv, uMouse, 0.28);
+          float drift = sin(uTime * 0.18) * 0.16;
+          float pulse = 0.5 + 0.5 * sin(uTime * 0.85);
 
-          vec3 ink = vec3(0.027, 0.029, 0.032);
-          vec3 champagne = vec3(0.72, 0.57, 0.36);
-          vec3 slate = vec3(0.34, 0.39, 0.43);
-          vec3 ivory = vec3(0.92, 0.87, 0.77);
+          float goldA = glow(centered, vec2(-0.42 + drift, 0.20), 0.75);
+          float goldB = glow(centered, vec2(0.48, -0.28 - drift), 0.68);
+          float cursor = glow(uv, uMouse, 0.34);
 
-          float grain = fract(sin(dot(uv * (uTime + 1.0), vec2(12.9898, 78.233))) * 43758.5453) * 0.028;
-          vec3 color = ink + champagne * warm * 0.14 + slate * cool * 0.12 + ivory * cursor * 0.045 + grain;
+          vec3 ink = vec3(0.035, 0.036, 0.038);
+          vec3 champagne = vec3(0.78, 0.62, 0.36);
+          vec3 clay = vec3(0.58, 0.39, 0.28);
+          vec3 ivory = vec3(0.93, 0.89, 0.79);
+
+          float grain = fract(sin(dot(uv * (uTime + 1.0), vec2(12.9898, 78.233))) * 43758.5453) * 0.03;
+
+          vec3 color = ink;
+          color += champagne * goldA * 0.18;
+          color += clay * goldB * 0.14;
+          color += ivory * cursor * (0.05 + pulse * 0.025);
+          color += grain;
+
           gl_FragColor = vec4(color, 0.96);
         }
       `,
     });
 
-    const mesh = new THREE.Mesh(geometry, material);
-    scene.add(mesh);
+    scene.add(new THREE.Mesh(geometry, material));
 
     const resize = () => {
       const width = window.innerWidth;
       const height = window.innerHeight;
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.6));
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.7));
       renderer.setSize(width, height, false);
       uniforms.uResolution.value.set(width, height);
     };
 
     const pointer = (event: PointerEvent) => {
-      uniforms.uMouse.value.set(event.clientX / window.innerWidth, 1 - event.clientY / window.innerHeight);
+      uniforms.uMouse.value.set(
+        event.clientX / window.innerWidth,
+        1 - event.clientY / window.innerHeight,
+      );
     };
 
     let frame = 0;
+
     const render = () => {
       if (!reducedMotion) uniforms.uTime.value += 0.016;
       renderer.render(scene, camera);
@@ -122,6 +179,7 @@ function ShaderBackdrop() {
 
     resize();
     render();
+
     window.addEventListener("resize", resize);
     window.addEventListener("pointermove", pointer);
 
@@ -138,7 +196,7 @@ function ShaderBackdrop() {
   return <canvas ref={canvasRef} className="shader-backdrop" aria-hidden="true" />;
 }
 
-type AmbientParticle = {
+type Particle = {
   x: number;
   y: number;
   vx: number;
@@ -148,7 +206,7 @@ type AmbientParticle = {
   color: string;
 };
 
-function ParticlesLayer() {
+function AntigravityParticles() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const reducedMotion = useReducedMotionPreference();
 
@@ -156,39 +214,41 @@ function ParticlesLayer() {
     if (reducedMotion) return;
 
     const canvas = canvasRef.current;
-    const context = canvas?.getContext("2d");
-    if (!canvas || !context) return;
+    const ctx = canvas?.getContext("2d");
+    if (!canvas || !ctx) return;
 
-    const colors = ["198, 167, 107", "139, 148, 158", "235, 229, 214"];
-    const particles: AmbientParticle[] = [];
+    const colors = ["198,167,107", "244,239,228", "169,129,99"];
+    const particles: Particle[] = [];
     const pointer = { x: -9999, y: -9999 };
-    let frame = 0;
     let width = 0;
     let height = 0;
+    let frame = 0;
 
-    const createParticle = (): AmbientParticle => ({
+    const createParticle = (): Particle => ({
       x: Math.random() * width,
       y: Math.random() * height,
-      vx: (Math.random() - 0.5) * 0.18,
-      vy: (Math.random() - 0.5) * 0.18,
-      size: 0.8 + Math.random() * 1.7,
-      alpha: 0.12 + Math.random() * 0.18,
+      vx: (Math.random() - 0.5) * 0.28,
+      vy: (Math.random() - 0.5) * 0.28,
+      size: 1.2 + Math.random() * 3.4,
+      alpha: 0.12 + Math.random() * 0.28,
       color: colors[Math.floor(Math.random() * colors.length)],
     });
 
     const resize = () => {
-      const pixelRatio = Math.min(window.devicePixelRatio || 1, 1.6);
+      const pixelRatio = Math.min(window.devicePixelRatio || 1, 1.8);
       width = window.innerWidth;
       height = window.innerHeight;
+
       canvas.width = Math.floor(width * pixelRatio);
       canvas.height = Math.floor(height * pixelRatio);
       canvas.style.width = `${width}px`;
       canvas.style.height = `${height}px`;
-      context.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
+
+      ctx.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
 
       particles.length = 0;
-      const count = Math.min(42, Math.max(18, Math.floor(width / 44)));
-      for (let index = 0; index < count; index += 1) particles.push(createParticle());
+      const count = Math.min(74, Math.max(32, Math.floor(width / 24)));
+      for (let i = 0; i < count; i += 1) particles.push(createParticle());
     };
 
     const movePointer = (event: PointerEvent) => {
@@ -202,53 +262,63 @@ function ParticlesLayer() {
     };
 
     const draw = () => {
-      context.clearRect(0, 0, width, height);
+      ctx.clearRect(0, 0, width, height);
+      ctx.save();
+      ctx.globalCompositeOperation = "lighter";
 
       particles.forEach((particle, index) => {
         const dx = particle.x - pointer.x;
         const dy = particle.y - pointer.y;
         const distance = Math.hypot(dx, dy);
 
-        if (distance < 130) {
-          const force = (130 - distance) / 130;
-          particle.vx += (dx / Math.max(distance, 1)) * force * 0.007;
-          particle.vy += (dy / Math.max(distance, 1)) * force * 0.007;
+        if (distance < 180) {
+          const force = (180 - distance) / 180;
+          particle.vx += (dx / Math.max(distance, 1)) * force * 0.014;
+          particle.vy += (dy / Math.max(distance, 1)) * force * 0.014;
         }
 
         particle.x += particle.vx;
         particle.y += particle.vy;
-        particle.vx *= 0.993;
-        particle.vy *= 0.993;
+
+        particle.vx *= 0.992;
+        particle.vy *= 0.992;
 
         if (particle.x < 0 || particle.x > width) particle.vx *= -1;
         if (particle.y < 0 || particle.y > height) particle.vy *= -1;
+
         particle.x = Math.max(0, Math.min(width, particle.x));
         particle.y = Math.max(0, Math.min(height, particle.y));
 
-        context.beginPath();
-        context.fillStyle = `rgba(${particle.color}, ${particle.alpha})`;
-        context.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
-        context.fill();
+        ctx.beginPath();
+        ctx.shadowBlur = 28;
+        ctx.shadowColor = `rgba(${particle.color}, 0.48)`;
+        ctx.fillStyle = `rgba(${particle.color}, ${particle.alpha})`;
+        ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
+        ctx.fill();
 
         for (let nextIndex = index + 1; nextIndex < particles.length; nextIndex += 1) {
           const next = particles[nextIndex];
           const linkDistance = Math.hypot(particle.x - next.x, particle.y - next.y);
-          if (linkDistance > 128) continue;
 
-          context.beginPath();
-          context.strokeStyle = `rgba(198, 167, 107, ${(1 - linkDistance / 128) * 0.08})`;
-          context.lineWidth = 1;
-          context.moveTo(particle.x, particle.y);
-          context.lineTo(next.x, next.y);
-          context.stroke();
+          if (linkDistance > 135) continue;
+
+          ctx.beginPath();
+          ctx.shadowBlur = 18;
+          ctx.strokeStyle = `rgba(198,167,107, ${(1 - linkDistance / 135) * 0.15})`;
+          ctx.lineWidth = 1;
+          ctx.moveTo(particle.x, particle.y);
+          ctx.lineTo(next.x, next.y);
+          ctx.stroke();
         }
       });
 
+      ctx.restore();
       frame = window.requestAnimationFrame(draw);
     };
 
     resize();
     draw();
+
     window.addEventListener("resize", resize);
     window.addEventListener("pointermove", movePointer);
     window.addEventListener("pointerleave", leavePointer);
@@ -261,7 +331,7 @@ function ParticlesLayer() {
     };
   }, [reducedMotion]);
 
-  return <canvas ref={canvasRef} className="particles-layer" aria-hidden="true" />;
+  return <canvas ref={canvasRef} className="particles-layer antigravity-canvas" aria-hidden="true" />;
 }
 
 function useMotionSystem() {
@@ -270,7 +340,11 @@ function useMotionSystem() {
   useEffect(() => {
     if (reducedMotion) return;
 
-    const lenis = new Lenis({ lerp: 0.075, smoothWheel: true });
+    const lenis = new Lenis({
+      lerp: 0.07,
+      smoothWheel: true,
+    });
+
     lenis.on("scroll", ScrollTrigger.update);
 
     const ticker = (time: number) => lenis.raf(time * 1000);
@@ -281,7 +355,7 @@ function useMotionSystem() {
       gsap.utils.toArray<HTMLElement>(".reveal").forEach((element) => {
         gsap.fromTo(
           element,
-          { autoAlpha: 0, y: 38, filter: "blur(10px)" },
+          { autoAlpha: 0, y: 34, filter: "blur(12px)" },
           {
             autoAlpha: 1,
             y: 0,
@@ -291,24 +365,10 @@ function useMotionSystem() {
             scrollTrigger: {
               trigger: element,
               start: "top 84%",
-              end: "bottom 18%",
               toggleActions: "play none none reverse",
             },
           },
         );
-      });
-
-      gsap.utils.toArray<HTMLElement>(".parallax-card").forEach((element) => {
-        gsap.to(element, {
-          yPercent: -5,
-          ease: "none",
-          scrollTrigger: {
-            trigger: element,
-            start: "top bottom",
-            end: "bottom top",
-            scrub: 0.8,
-          },
-        });
       });
     });
 
@@ -320,85 +380,159 @@ function useMotionSystem() {
   }, [reducedMotion]);
 }
 
-function Icon({ type }: { type: VisualPrinciple["icon"] | "arrow" | "spark" | "mail" }) {
-  const commonProps = {
-    viewBox: "0 0 24 24",
-    fill: "none",
-    xmlns: "http://www.w3.org/2000/svg",
-    "aria-hidden": true,
-  };
+function ShinyText({ children }: { children: ReactNode }) {
+  return <span className="shiny-text">{children}</span>;
+}
 
-  if (type === "layers") {
-    return (
-      <svg {...commonProps}>
-        <path d="M12 3 3.5 7.5 12 12l8.5-4.5L12 3Z" />
-        <path d="M5 12.2 12 16l7-3.8" />
-        <path d="M5 16.2 12 20l7-3.8" />
-      </svg>
-    );
-  }
+function BlurText({ text }: { text: string }) {
+  return (
+    <span className="blur-text" aria-label={text}>
+      {text.split(" ").map((word, index) => (
+        <span key={`${word}-${index}`} className="blur-word" style={{ "--i": index } as CSSProperties}>
+          {word}
+        </span>
+      ))}
+    </span>
+  );
+}
 
-  if (type === "motion") {
-    return (
-      <svg {...commonProps}>
-        <path d="M4 17c4.8 0 4.8-10 9.6-10 3 0 4.5 2.7 5.4 5" />
-        <path d="M15 12h4.5V7.5" />
-      </svg>
-    );
-  }
+function RotatingText({ words }: { words: string[] }) {
+  const [index, setIndex] = useState(0);
+  const reducedMotion = useReducedMotionPreference();
 
-  if (type === "code") {
-    return (
-      <svg {...commonProps}>
-        <path d="m9 7-5 5 5 5" />
-        <path d="m15 7 5 5-5 5" />
-        <path d="m13 5-2 14" />
-      </svg>
-    );
-  }
+  useEffect(() => {
+    if (reducedMotion) return;
 
-  if (type === "performance") {
-    return (
-      <svg {...commonProps}>
-        <path d="M12 21a8 8 0 1 0-8-8" />
-        <path d="M12 13 17 8" />
-        <path d="M5 21h14" />
-      </svg>
-    );
-  }
+    const timer = window.setInterval(() => {
+      setIndex((current) => (current + 1) % words.length);
+    }, 1650);
 
-  if (type === "mail") {
-    return (
-      <svg {...commonProps}>
-        <path d="M4 6h16v12H4V6Z" />
-        <path d="m4 7 8 6 8-6" />
-      </svg>
-    );
-  }
-
-  if (type === "spark") {
-    return (
-      <svg {...commonProps}>
-        <path d="M12 3v18" />
-        <path d="M3 12h18" />
-        <path d="m5.6 5.6 12.8 12.8" />
-        <path d="m18.4 5.6-12.8 12.8" />
-      </svg>
-    );
-  }
+    return () => window.clearInterval(timer);
+  }, [reducedMotion, words.length]);
 
   return (
-    <svg {...commonProps}>
-      <path d="M7 17 17 7" />
-      <path d="M8 7h9v9" />
-    </svg>
+    <span className="rotating-shell" aria-live="polite">
+      <span key={words[index]} className="rotating-word">
+        {words[index]}
+      </span>
+    </span>
+  );
+}
+
+function CircularText() {
+  return (
+    <div className="circular-brand" aria-label="Darma Dlavie Creative Developer">
+      <svg viewBox="0 0 140 140" aria-hidden="true">
+        <defs>
+          <path id="dlavie-circular-text" d="M70,70 m-50,0 a50,50 0 1,1 100,0 a50,50 0 1,1 -100,0" />
+        </defs>
+        <text>
+          <textPath href="#dlavie-circular-text">Darma Dlavie • Creative Developer • </textPath>
+        </text>
+      </svg>
+      <span>DL</span>
+    </div>
+  );
+}
+
+function CountUp({ value, suffix = "" }: { value: number; suffix?: string }) {
+  const [display, setDisplay] = useState(0);
+  const reducedMotion = useReducedMotionPreference();
+
+  useEffect(() => {
+    if (reducedMotion) {
+      setDisplay(value);
+      return;
+    }
+
+    let frame = 0;
+    const start = performance.now();
+
+    const tick = (now: number) => {
+      const progress = Math.min((now - start) / 1200, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+
+      setDisplay(Math.round(value * eased));
+
+      if (progress < 1) frame = window.requestAnimationFrame(tick);
+    };
+
+    frame = window.requestAnimationFrame(tick);
+
+    return () => window.cancelAnimationFrame(frame);
+  }, [reducedMotion, value]);
+
+  return (
+    <span className="metric-value">
+      {display.toLocaleString("id-ID")}
+      {suffix}
+    </span>
+  );
+}
+
+function MagneticButton({
+  href,
+  children,
+  variant = "ghost",
+  onClick,
+  external = false,
+}: {
+  href: string;
+  children: ReactNode;
+  variant?: "primary" | "ghost";
+  onClick?: () => void;
+  external?: boolean;
+}) {
+  const [{ x, y, s }, api] = useSpring(() => ({
+    x: 0,
+    y: 0,
+    s: 1,
+    config: { mass: 1, tension: 280, friction: 18 },
+  }));
+
+  const handleMove = (event: ReactPointerEvent<HTMLAnchorElement>) => {
+    const rect = event.currentTarget.getBoundingClientRect();
+    const relX = event.clientX - rect.left - rect.width / 2;
+    const relY = event.clientY - rect.top - rect.height / 2;
+
+    api.start({
+      x: relX * 0.16,
+      y: relY * 0.16,
+      s: 1.035,
+    });
+  };
+
+  const reset = () => {
+    api.start({ x: 0, y: 0, s: 1 });
+  };
+
+  return (
+    <animated.a
+      className={`magnetic-button ${variant}`}
+      href={href}
+      onMouseMove={handleMove}
+      onMouseLeave={reset}
+      onClick={(event) => {
+        fireBurst(event.currentTarget);
+        onClick?.();
+      }}
+      target={external ? "_blank" : undefined}
+      rel={external ? "noreferrer" : undefined}
+      style={{
+        transform: to([x, y, s], (nextX, nextY, nextScale) => {
+          return `translate3d(${nextX}px, ${nextY}px, 0) scale(${nextScale})`;
+        }),
+      }}
+    >
+      {children}
+    </animated.a>
   );
 }
 
 function Navbar() {
   const links = [
-    ["About", "#about"],
-    ["Works", "#works"],
+    ["Stage", "#top"],
+    ["Works", "#workbench"],
     ["Stack", "#stack"],
     ["Contact", "#contact"],
   ];
@@ -417,41 +551,37 @@ function Navbar() {
           </a>
         ))}
       </nav>
-    </header>
-  );
-}
 
-function LogoPill({ name, icon }: { name: string; icon: string }) {
-  return (
-    <span className="logo-pill">
-      <img src={icon} alt="" loading="lazy" />
-      {name}
-    </span>
+      <span className="engine-badge">VFX ENGINE 0.4</span>
+    </header>
   );
 }
 
 function Hero() {
   const emailHref = profile.email.includes("example") ? "#contact" : `mailto:${profile.email}`;
-  const featuredLogos = toolLogos.slice(0, 4);
 
   return (
-    <section id="top" className="hero section-grid">
+    <section id="top" className="hero stage-hero">
       <div className="hero-copy">
-        <motion.p
-          className="eyebrow"
+        <motion.div
+          className="hero-kicker-row"
           initial={{ opacity: 0, y: 18 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, ease: "easeOut" }}
         >
-          {profile.location} / {profile.availability}
-        </motion.p>
+          <p className="eyebrow">{profile.location} / {profile.availability}</p>
+          <span className="mini-rotator">
+            building <RotatingText words={["interfaces", "motion", "systems", "experiences"]} />
+          </span>
+        </motion.div>
 
         <motion.h1
           initial={{ opacity: 0, y: 32 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.9, delay: 0.1, ease: "easeOut" }}
+          transition={{ duration: 0.9, delay: 0.08, ease: "easeOut" }}
         >
-          {profile.headline}
+          <BlurText text="Designing refined web experiences with" />{" "}
+          <ShinyText>code, motion, and visual detail.</ShinyText>
         </motion.h1>
 
         <motion.p
@@ -469,12 +599,12 @@ function Hero() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.34, ease: "easeOut" }}
         >
-          <a className="button primary" href="#works">
-            Explore works <Icon type="arrow" />
-          </a>
-          <a className="button ghost" href={emailHref}>
-            Start a project <Icon type="mail" />
-          </a>
+          <MagneticButton href="#workbench" variant="primary">
+            Explore the stage <ArrowUpRight size={18} />
+          </MagneticButton>
+          <MagneticButton href={emailHref}>
+            Start a project <Mail size={18} />
+          </MagneticButton>
         </motion.div>
 
         <motion.div
@@ -483,21 +613,24 @@ function Hero() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.45, ease: "easeOut" }}
         >
-          {featuredLogos.map((item) => (
-            <LogoPill key={item.name} name={item.name} icon={item.icon} />
+          {toolLogos.slice(0, 5).map((item) => (
+            <span key={item.name} className="logo-pill">
+              <img src={item.icon} alt="" loading="lazy" />
+              {item.name}
+            </span>
           ))}
         </motion.div>
       </div>
 
       <motion.aside
-        className="hero-panel parallax-card"
+        className="hero-panel interactive-orb-panel"
         initial={{ opacity: 0, scale: 0.96, rotate: -1.2 }}
         animate={{ opacity: 1, scale: 1, rotate: 0 }}
         transition={{ duration: 0.9, delay: 0.22, ease: "easeOut" }}
       >
         <div className="panel-topline">
           <span>Selected Identity</span>
-          <Icon type="spark" />
+          <CircularText />
         </div>
 
         <div className="portrait-orb">
@@ -525,131 +658,273 @@ function Hero() {
   );
 }
 
-function SectionIntro({ kicker, title, description }: { kicker: string; title: string; description: string }) {
+function LiveStats() {
+  const [visits, setVisits] = useState(1);
+  const [clock, setClock] = useState("");
+
+  useEffect(() => {
+    const key = "dlavie-portfolio-visits";
+    const nextVisits = Number(window.localStorage.getItem(key) || "0") + 1;
+
+    window.localStorage.setItem(key, String(nextVisits));
+    setVisits(nextVisits);
+
+    const formatter = new Intl.DateTimeFormat("id-ID", {
+      timeZone: "Asia/Jakarta",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: false,
+    });
+
+    const update = () => setClock(formatter.format(new Date()));
+
+    update();
+
+    const timer = window.setInterval(update, 1000);
+
+    return () => window.clearInterval(timer);
+  }, []);
+
+  const metrics = [
+    { label: "Local visits", value: visits, suffix: "x", caption: "Kunjungan di browser kamu." },
+    { label: "Projects", value: projects.length, suffix: "", caption: "Project aktif di portfolio." },
+    { label: "Tech engines", value: toolLogos.length, suffix: "", caption: "Visual stack yang tampil." },
+  ];
+
   return (
-    <div className="section-intro reveal">
-      <p className="eyebrow">{kicker}</p>
-      <h2>{title}</h2>
-      <p>{description}</p>
-    </div>
+    <section className="metrics-grid reveal" aria-label="Live portfolio stats">
+      {metrics.map((metric) => (
+        <article key={metric.label} className="metric-card">
+          <small>{metric.label}</small>
+          <CountUp value={metric.value} suffix={metric.suffix} />
+          <span>{metric.caption}</span>
+        </article>
+      ))}
+
+      <article className="metric-card">
+        <small>Jakarta time</small>
+        <span className="metric-value">{clock}</span>
+        <span>Realtime clock for living interface.</span>
+      </article>
+    </section>
   );
+}
+
+function PrincipleIcon({ type }: { type: VisualPrinciple["icon"] }) {
+  if (type === "layers") return <Layers3 />;
+  if (type === "motion") return <Orbit />;
+  if (type === "code") return <Code2 />;
+  return <Gauge />;
 }
 
 function About() {
   return (
     <section id="about" className="content-section about-section">
-      <SectionIntro
-        kicker="About"
-        title="A refined system for personal branding, not just a page full of text."
-        description={profile.longBio}
-      />
+      <div className="section-intro reveal">
+        <p className="eyebrow">About</p>
+        <h2>
+          <ShinyText>Not a long page.</ShinyText> A compact interactive system.
+        </h2>
+        <p>{profile.longBio}</p>
+      </div>
 
       <div className="principles-grid reveal">
         {visualPrinciples.map((item) => (
-          <article key={item.title} className="principle-card">
-            <div className="card-icon">
-              <Icon type={item.icon} />
-            </div>
+          <button
+            key={item.title}
+            className="principle-card click-card"
+            type="button"
+            onClick={(event) => fireBurst(event.currentTarget)}
+          >
+            <span className="card-icon">
+              <PrincipleIcon type={item.icon} />
+            </span>
             <h3>{item.title}</h3>
             <p>{item.description}</p>
-          </article>
+          </button>
         ))}
       </div>
     </section>
   );
 }
 
-function ProjectPreview({ project, index }: { project: Project; index: number }) {
-  const logo = toolLogos[index % toolLogos.length];
+function ProjectDeck() {
+  const [activeIndex, setActiveIndex] = useState(0);
+  const activeProject = projects[activeIndex] ?? projects[0];
+
+  const [{ rotateX, rotateY, scale }, api] = useSpring(() => ({
+    rotateX: 0,
+    rotateY: 0,
+    scale: 1,
+    config: { mass: 1, tension: 260, friction: 18 },
+  }));
+
+  const handleMove = (event: ReactPointerEvent<HTMLElement>) => {
+    const rect = event.currentTarget.getBoundingClientRect();
+    const y = event.clientY - rect.top;
+    const x = event.clientX - rect.left;
+
+    const rotateYValue = ((x / rect.width) - 0.5) * 12;
+    const rotateXValue = -((y / rect.height) - 0.5) * 10;
+
+    api.start({
+      rotateX: rotateXValue,
+      rotateY: rotateYValue,
+      scale: 1.018,
+    });
+  };
+
+  const reset = () => {
+    api.start({ rotateX: 0, rotateY: 0, scale: 1 });
+  };
 
   return (
-    <div className="project-preview" aria-hidden="true">
-      <div className="preview-toolbar">
-        <span />
-        <span />
-        <span />
+    <section id="workbench" className="content-section workbench-section">
+      <div className="section-intro reveal">
+        <p className="eyebrow">Interactive workbench</p>
+        <h2>
+          Select a project. Feel the interface <RotatingText words={["respond", "tilt", "glow", "move"]} />.
+        </h2>
+        <p>
+          Project tidak lagi hanya list panjang. Section ini dibuat seperti interactive deck agar pengunjung punya alasan
+          untuk klik, hover, dan eksplorasi.
+        </p>
       </div>
-      <div className="preview-canvas">
-        <img src={logo.icon} alt="" loading="lazy" />
-        <div>
-          <small>{project.category}</small>
-          <strong>{project.title}</strong>
+
+      <div className="project-deck reveal">
+        <div className="project-tabs" role="tablist" aria-label="Project selector">
+          {projects.map((project, index) => (
+            <button
+              key={project.title}
+              className={`project-tab ${index === activeIndex ? "is-active" : ""}`}
+              type="button"
+              onClick={(event) => {
+                setActiveIndex(index);
+                fireBurst(event.currentTarget);
+              }}
+            >
+              <span>0{index + 1}</span>
+              <strong>{project.title}</strong>
+              <small>{project.category}</small>
+            </button>
+          ))}
         </div>
+
+        <animated.article
+          className="deck-preview"
+          onMouseMove={handleMove}
+          onMouseLeave={reset}
+          style={{
+            transform: to([rotateX, rotateY, scale], (nextX, nextY, nextScale) => {
+              return `perspective(1000px) rotateX(${nextX}deg) rotateY(${nextY}deg) scale(${nextScale})`;
+            }),
+          }}
+        >
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={activeProject.title}
+              className="deck-preview-inner"
+              initial={{ opacity: 0, y: 18, filter: "blur(12px)" }}
+              animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+              exit={{ opacity: 0, y: -18, filter: "blur(12px)" }}
+              transition={{ duration: 0.32, ease: "easeOut" }}
+            >
+              <div className="deck-toolbar">
+                <span />
+                <span />
+                <span />
+                <small>{activeProject.status}</small>
+              </div>
+
+              <div className="deck-main">
+                <div>
+                  <p className="eyebrow">{activeProject.year} / {activeProject.category}</p>
+                  <h3>{activeProject.title}</h3>
+                  <p>{activeProject.description}</p>
+                </div>
+
+                <div className="deck-orbit">
+                  <Sparkles />
+                </div>
+              </div>
+
+              <div className="tag-row">
+                {activeProject.stack.map((tech) => (
+                  <span key={tech}>{tech}</span>
+                ))}
+              </div>
+
+              <MagneticButton href={activeProject.href ?? "#"} variant="primary">
+                Open project <ArrowUpRight size={18} />
+              </MagneticButton>
+            </motion.div>
+          </AnimatePresence>
+        </animated.article>
       </div>
-      <div className="preview-lines">
-        <span />
-        <span />
-        <span />
-      </div>
-    </div>
+    </section>
   );
 }
 
-function ProjectCard({ project, index }: { project: Project; index: number }) {
+function TechInspector() {
+  const [activeIndex, setActiveIndex] = useState(0);
+  const activeTool = toolLogos[activeIndex] ?? toolLogos[0];
+
   return (
-    <article className="project-card reveal">
-      <ProjectPreview project={project} index={index} />
-      <div className="project-body">
-        <div className="project-meta">
-          <span>{project.year}</span>
-          <span>{project.category}</span>
-          <span>{project.status}</span>
-        </div>
-        <h3>{project.title}</h3>
-        <p>{project.description}</p>
-        <div className="tag-row">
-          {project.stack.map((tech) => (
-            <span key={tech}>{tech}</span>
+    <section id="stack" className="content-section stack-section">
+      <div className="section-intro reveal">
+        <p className="eyebrow">Technology inspector</p>
+        <h2>
+          A stack wall that reacts. <ShinyText>Click the engines.</ShinyText>
+        </h2>
+        <p>
+          Logo bukan pajangan. Setiap engine bisa dipilih untuk memperlihatkan fungsi dan posisi teknisnya dalam
+          portfolio.
+        </p>
+      </div>
+
+      <div className="tech-inspector reveal">
+        <aside className="tech-stage">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={activeTool.name}
+              initial={{ opacity: 0, scale: 0.96, filter: "blur(12px)" }}
+              animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
+              exit={{ opacity: 0, scale: 0.96, filter: "blur(12px)" }}
+              transition={{ duration: 0.28, ease: "easeOut" }}
+            >
+              <img src={activeTool.icon} alt={`${activeTool.name} logo`} />
+              <p className="eyebrow">{activeTool.label}</p>
+              <h3>{activeTool.name}</h3>
+              <p>{activeTool.description}</p>
+            </motion.div>
+          </AnimatePresence>
+        </aside>
+
+        <div className="tech-grid" role="tablist" aria-label="Technology selector">
+          {toolLogos.map((tool, index) => (
+            <button
+              key={tool.name}
+              type="button"
+              className={`tech-button ${index === activeIndex ? "is-active" : ""}`}
+              onClick={(event) => {
+                setActiveIndex(index);
+                fireBurst(event.currentTarget);
+              }}
+            >
+              <img src={tool.icon} alt="" loading="lazy" />
+              <span>{tool.name}</span>
+            </button>
           ))}
         </div>
       </div>
-      <a className="project-link" href={project.href ?? "#"} aria-label={`Open ${project.title}`}>
-        <Icon type="arrow" />
-      </a>
-    </article>
-  );
-}
 
-function Works() {
-  return (
-    <section id="works" className="content-section works-section">
-      <SectionIntro
-        kicker="Selected works"
-        title="Project cards now carry visual identity, preview surfaces, and real tech context."
-        description="Ganti daftar project ini dengan karya asli kamu. Card sudah disiapkan untuk link live demo, GitHub, atau case study tanpa terlihat seperti blok teks biasa."
-      />
-
-      <div className="project-list">
-        {projects.map((project, index) => (
-          <ProjectCard key={project.title} project={project} index={index} />
-        ))}
-      </div>
-    </section>
-  );
-}
-
-function TechnologyWall() {
-  return (
-    <section id="stack" className="content-section stack-section">
-      <SectionIntro
-        kicker="Technology wall"
-        title="Real logos, real tooling, and a cleaner visual hierarchy."
-        description="Bagian stack dibuat lebih hidup dengan logo library asli, label fungsi, dan deskripsi singkat agar tidak hanya menjadi teks berjejer."
-      />
-
-      <div className="tool-grid reveal">
-        {toolLogos.map((tool) => (
-          <article key={tool.name} className="tool-card">
-            <div className="tool-icon">
-              <img src={tool.icon} alt={`${tool.name} logo`} loading="lazy" />
-            </div>
-            <div>
-              <span>{tool.label}</span>
-              <h3>{tool.name}</h3>
-              <p>{tool.description}</p>
-            </div>
-          </article>
-        ))}
+      <div className="velocity-strip reveal" aria-hidden="true">
+        <div className="velocity-track">
+          {[...techStack, ...techStack, ...techStack].map((item, index) => (
+            <span key={`${item}-${index}`}>{item}</span>
+          ))}
+        </div>
       </div>
 
       <div className="capability-grid reveal">
@@ -657,38 +932,44 @@ function TechnologyWall() {
           <span key={item}>{item}</span>
         ))}
       </div>
-
-      <div className="marquee reveal" aria-label="Technology stack">
-        <div className="marquee-track">
-          {[...techStack, ...techStack].map((item, index) => (
-            <span key={`${item}-${index}`}>{item}</span>
-          ))}
-        </div>
-      </div>
     </section>
   );
 }
 
 function Experience() {
+  const [activeIndex, setActiveIndex] = useState(0);
+  const active = experience[activeIndex] ?? experience[0];
+
   return (
     <section className="content-section experience-section">
-      <SectionIntro
-        kicker="Timeline"
-        title="Experience presented as a structured path, not a plain paragraph."
-        description="Timeline ini siap diisi dengan pengalaman, project, organisasi, atau pencapaian kamu. Setiap item dibuat seperti editorial record yang mudah dibaca."
-      />
+      <div className="section-intro reveal">
+        <p className="eyebrow">Timeline</p>
+        <h2>
+          Experience as a <RotatingText words={["path", "record", "story", "system"]} />.
+        </h2>
+        <p>Timeline dibuat compact agar tidak menjadi scroll panjang yang membosankan.</p>
+      </div>
 
-      <div className="timeline reveal">
-        {experience.map((item) => (
-          <article key={`${item.period}-${item.role}`}>
-            <span>{item.period}</span>
-            <div>
-              <h3>{item.role}</h3>
-              <p className="company">{item.company}</p>
-              <p>{item.description}</p>
-            </div>
-          </article>
-        ))}
+      <div className="timeline-switcher reveal">
+        <div className="timeline-tabs">
+          {experience.map((item, index) => (
+            <button
+              key={`${item.period}-${item.role}`}
+              type="button"
+              className={index === activeIndex ? "is-active" : ""}
+              onClick={() => setActiveIndex(index)}
+            >
+              {item.period}
+            </button>
+          ))}
+        </div>
+
+        <article className="timeline-detail">
+          <small>{active.period}</small>
+          <h3>{active.role}</h3>
+          <p className="company">{active.company}</p>
+          <p>{active.description}</p>
+        </article>
       </div>
     </section>
   );
@@ -700,17 +981,22 @@ function Contact() {
   return (
     <section id="contact" className="contact-section reveal">
       <p className="eyebrow">Contact</p>
-      <h2>Let’s shape Dlavie into a more elegant digital presence.</h2>
+      <h2>
+        Let’s shape Dlavie into a <ShinyText>king-level digital presence.</ShinyText>
+      </h2>
       <p>
-        Kirim detail kontak, sosial media, foto, dan tone personal kamu. Setelah itu copywriting serta visual hierarchy bisa dipoles lagi agar terasa lebih personal dan premium.
+        Kirim foto, detail project, dan copywriting personal kamu. Setelah itu visual system ini bisa dipoles menjadi
+        identity portfolio yang matang dan memorable.
       </p>
+
       <div className="contact-actions">
-        <a className="button primary" href={emailHref}>
-          {profile.email} <Icon type="mail" />
-        </a>
-        <a className="button ghost" href={profile.github} target="_blank" rel="noreferrer">
-          GitHub <Icon type="arrow" />
-        </a>
+        <MagneticButton href={emailHref} variant="primary">
+          {profile.email} <Mail size={18} />
+        </MagneticButton>
+
+        <MagneticButton href={profile.github} external>
+          GitHub <Github size={18} />
+        </MagneticButton>
       </div>
     </section>
   );
@@ -727,20 +1013,36 @@ function App() {
   return (
     <main onPointerMove={handlePointerMove}>
       <ShaderBackdrop />
-      <ParticlesLayer />
+      <AntigravityParticles />
       <div className="noise" aria-hidden="true" />
       <div className="cursor-glow" aria-hidden="true" />
+
       <Navbar />
       <Hero />
+      <LiveStats />
+      <ProjectDeck />
+      <TechInspector />
       <About />
-      <Works />
-      <TechnologyWall />
       <Experience />
       <Contact />
+
       <footer className="footer">
         <span>© 2026 {profile.name}</span>
         <span>Designed for {profile.brand}</span>
       </footer>
+
+      <button
+        className="floating-action"
+        type="button"
+        onClick={(event) => {
+          fireBurst(event.currentTarget);
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        }}
+        aria-label="Back to top"
+      >
+        <MousePointerClick size={20} />
+        <span>Stage</span>
+      </button>
     </main>
   );
 }
