@@ -7,12 +7,15 @@ import {
   type PointerEvent as ReactPointerEvent,
   type ReactNode,
 } from "react";
+import { Analytics } from "@vercel/analytics/react";
+import { SpeedInsights } from "@vercel/speed-insights/react";
 import { AnimatePresence, motion } from "framer-motion";
 import { animated, to, useSpring } from "@react-spring/web";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Lenis from "lenis";
 import * as THREE from "three";
+import Typewriter from "typewriter-effect";
 import {
   ArrowUpRight,
   Code2,
@@ -53,18 +56,9 @@ function registerInteraction(element?: HTMLElement) {
 
   element.animate(
     [
-      {
-        transform: "scale(1)",
-        filter: "brightness(1)",
-      },
-      {
-        transform: "scale(0.985)",
-        filter: "brightness(1.08)",
-      },
-      {
-        transform: "scale(1)",
-        filter: "brightness(1)",
-      },
+      { transform: "scale(1)", filter: "brightness(1)" },
+      { transform: "scale(0.985)", filter: "brightness(1.08)" },
+      { transform: "scale(1)", filter: "brightness(1)" },
     ],
     {
       duration: 220,
@@ -131,10 +125,7 @@ function ShaderBackdrop() {
     let frame = 0;
 
     const render = () => {
-      if (!reducedMotion) {
-        uniforms.uTime.value += 0.016;
-      }
-
+      if (!reducedMotion) uniforms.uTime.value += 0.016;
       uniforms.uMouse.value.lerp(mouseTarget, 0.075);
       renderer.render(scene, camera);
       frame = window.requestAnimationFrame(render);
@@ -212,14 +203,10 @@ function AntigravityParticles() {
       canvas.style.height = `${height}px`;
 
       ctx.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
-
       particles.length = 0;
 
       const count = Math.min(74, Math.max(32, Math.floor(width / 24)));
-
-      for (let i = 0; i < count; i += 1) {
-        particles.push(createParticle());
-      }
+      for (let i = 0; i < count; i += 1) particles.push(createParticle());
     };
 
     const movePointer = (event: PointerEvent) => {
@@ -244,14 +231,12 @@ function AntigravityParticles() {
 
         if (distance < 180) {
           const force = (180 - distance) / 180;
-
           particle.vx += (dx / Math.max(distance, 1)) * force * 0.014;
           particle.vy += (dy / Math.max(distance, 1)) * force * 0.014;
         }
 
         particle.x += particle.vx;
         particle.y += particle.vy;
-
         particle.vx *= 0.992;
         particle.vy *= 0.992;
 
@@ -271,7 +256,6 @@ function AntigravityParticles() {
         for (let nextIndex = index + 1; nextIndex < particles.length; nextIndex += 1) {
           const next = particles[nextIndex];
           const linkDistance = Math.hypot(particle.x - next.x, particle.y - next.y);
-
           if (linkDistance > 135) continue;
 
           ctx.beginPath();
@@ -306,6 +290,55 @@ function AntigravityParticles() {
   return <canvas ref={canvasRef} className="particles-layer antigravity-canvas" aria-hidden="true" />;
 }
 
+function CustomCursor() {
+  const [label, setLabel] = useState("");
+  const [visible, setVisible] = useState(false);
+
+  const [{ x, y, scale }, api] = useSpring(() => ({
+    x: 0,
+    y: 0,
+    scale: 0,
+    config: { mass: 1, tension: 420, friction: 28 },
+  }));
+
+  useEffect(() => {
+    const pointerMove = (event: PointerEvent) => {
+      api.start({
+        x: event.clientX,
+        y: event.clientY,
+        scale: visible ? 1 : 0.72,
+      });
+
+      const target = event.target instanceof Element ? event.target.closest<HTMLElement>("[data-cursor]") : null;
+
+      if (target) {
+        setLabel(target.dataset.cursor || "Open");
+        setVisible(true);
+      } else {
+        setLabel("");
+        setVisible(false);
+      }
+    };
+
+    window.addEventListener("pointermove", pointerMove);
+    return () => window.removeEventListener("pointermove", pointerMove);
+  }, [api, visible]);
+
+  return (
+    <animated.div
+      className={`custom-cursor ${visible ? "is-active" : ""}`}
+      style={{
+        transform: to([x, y, scale], (nextX, nextY, nextScale) => {
+          return `translate3d(${nextX}px, ${nextY}px, 0) translate(-50%, -50%) scale(${nextScale})`;
+        }),
+      }}
+      aria-hidden="true"
+    >
+      <span>{label}</span>
+    </animated.div>
+  );
+}
+
 function useMotionSystem() {
   const reducedMotion = useReducedMotionPreference();
 
@@ -320,7 +353,6 @@ function useMotionSystem() {
     lenis.on("scroll", ScrollTrigger.update);
 
     const ticker = (time: number) => lenis.raf(time * 1000);
-
     gsap.ticker.add(ticker);
     gsap.ticker.lagSmoothing(0);
 
@@ -328,11 +360,7 @@ function useMotionSystem() {
       gsap.utils.toArray<HTMLElement>(".reveal").forEach((element) => {
         gsap.fromTo(
           element,
-          {
-            autoAlpha: 0,
-            y: 34,
-            filter: "blur(12px)",
-          },
+          { autoAlpha: 0, y: 34, filter: "blur(12px)" },
           {
             autoAlpha: 1,
             y: 0,
@@ -343,6 +371,27 @@ function useMotionSystem() {
               trigger: element,
               start: "top 84%",
               toggleActions: "play none none reverse",
+            },
+          },
+        );
+      });
+
+      gsap.utils.toArray<HTMLElement>(".split-heading").forEach((element) => {
+        const words = element.querySelectorAll<HTMLElement>(".split-word");
+
+        gsap.fromTo(
+          words,
+          { yPercent: 110, filter: "blur(10px)", opacity: 0 },
+          {
+            yPercent: 0,
+            filter: "blur(0px)",
+            opacity: 1,
+            duration: 0.85,
+            stagger: 0.045,
+            ease: "power4.out",
+            scrollTrigger: {
+              trigger: element,
+              start: "top 82%",
             },
           },
         );
@@ -359,6 +408,20 @@ function useMotionSystem() {
 
 function ShinyText({ children }: { children: ReactNode }) {
   return <span className="shiny-text">{children}</span>;
+}
+
+function SplitHeading({ children }: { children: string }) {
+  return (
+    <span className="split-heading" aria-label={children}>
+      {children.split(" ").map((word, index) => (
+        <span className="split-mask" aria-hidden="true" key={`${word}-${index}`}>
+          <span className="split-word" style={{ "--i": index } as CSSProperties}>
+            {word}
+          </span>
+        </span>
+      ))}
+    </span>
+  );
 }
 
 function BlurText({ text }: { text: string }) {
@@ -392,6 +455,28 @@ function RotatingText({ words }: { words: string[] }) {
       <span key={words[index]} className="rotating-word">
         {words[index]}
       </span>
+    </span>
+  );
+}
+
+function AiTypewriter() {
+  return (
+    <span className="ai-typewriter">
+      <Typewriter
+        options={{
+          strings: [
+            "shader-driven interfaces",
+            "cinematic interaction systems",
+            "AI-era visual identity",
+            "premium web experiences",
+          ],
+          autoStart: true,
+          loop: true,
+          delay: 34,
+          deleteSpeed: 18,
+          cursor: "▌",
+        }}
+      />
     </span>
   );
 }
@@ -431,9 +516,7 @@ function CountUp({ value, suffix = "" }: { value: number; suffix?: string }) {
 
       setDisplay(Math.round(value * eased));
 
-      if (progress < 1) {
-        frame = window.requestAnimationFrame(tick);
-      }
+      if (progress < 1) frame = window.requestAnimationFrame(tick);
     };
 
     frame = window.requestAnimationFrame(tick);
@@ -454,21 +537,19 @@ function MagneticButton({
   children,
   variant = "ghost",
   external = false,
+  cursor = "Open",
 }: {
   href: string;
   children: ReactNode;
   variant?: "primary" | "ghost";
   external?: boolean;
+  cursor?: string;
 }) {
   const [{ x, y, s }, api] = useSpring(() => ({
     x: 0,
     y: 0,
     s: 1,
-    config: {
-      mass: 1,
-      tension: 280,
-      friction: 18,
-    },
+    config: { mass: 1, tension: 280, friction: 18 },
   }));
 
   const handleMove = (event: ReactPointerEvent<HTMLAnchorElement>) => {
@@ -485,17 +566,14 @@ function MagneticButton({
   };
 
   const reset = () => {
-    api.start({
-      x: 0,
-      y: 0,
-      s: 1,
-    });
+    api.start({ x: 0, y: 0, s: 1 });
   };
 
   return (
     <animated.a
       className={`magnetic-button ${variant}`}
       href={href}
+      data-cursor={cursor}
       onMouseMove={handleMove}
       onMouseLeave={reset}
       onClick={(event) => registerInteraction(event.currentTarget)}
@@ -522,20 +600,20 @@ function Navbar() {
 
   return (
     <header className="site-header">
-      <a className="brand-mark" href="#top" aria-label="Back to top">
+      <a className="brand-mark" href="#top" aria-label="Back to top" data-cursor="Top">
         <span>DL</span>
         <strong>{profile.brand}</strong>
       </a>
 
       <nav className="nav-links" aria-label="Main navigation">
         {links.map(([label, href]) => (
-          <a key={href} href={href}>
+          <a key={href} href={href} data-cursor="Go">
             {label}
           </a>
         ))}
       </nav>
 
-      <span className="engine-badge">VFX ENGINE 0.6</span>
+      <span className="engine-badge">VFX ENGINE 0.7</span>
     </header>
   );
 }
@@ -566,9 +644,19 @@ function Hero() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.9, delay: 0.08, ease: "easeOut" }}
         >
-          <BlurText text="Designing refined web experiences with" />{" "}
+          <SplitHeading children="Designing refined web experiences with" />{" "}
           <ShinyText>code, motion, and visual detail.</ShinyText>
         </motion.h1>
+
+        <motion.div
+          className="hero-typewriter"
+          initial={{ opacity: 0, y: 18, filter: "blur(10px)" }}
+          animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+          transition={{ duration: 0.8, delay: 0.18, ease: "easeOut" }}
+        >
+          <span>Focused on</span>
+          <AiTypewriter />
+        </motion.div>
 
         <motion.p
           className="hero-description"
@@ -585,11 +673,11 @@ function Hero() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.34, ease: "easeOut" }}
         >
-          <MagneticButton href="#workbench" variant="primary">
+          <MagneticButton href="#workbench" variant="primary" cursor="View">
             Explore the stage <ArrowUpRight size={18} />
           </MagneticButton>
 
-          <MagneticButton href={emailHref}>
+          <MagneticButton href={emailHref} cursor="Contact">
             Start a project <Mail size={18} />
           </MagneticButton>
         </motion.div>
@@ -601,7 +689,7 @@ function Hero() {
           transition={{ duration: 0.8, delay: 0.45, ease: "easeOut" }}
         >
           {toolLogos.slice(0, 5).map((item) => (
-            <span key={item.name} className="logo-pill">
+            <span key={item.name} className="logo-pill" data-cursor={item.name}>
               <img src={item.icon} alt="" loading="lazy" />
               {item.name}
             </span>
@@ -674,37 +762,22 @@ function LiveStats() {
   }, []);
 
   const metrics = [
-    {
-      label: "Local visits",
-      value: visits,
-      suffix: "x",
-      caption: "Kunjungan di browser kamu.",
-    },
-    {
-      label: "Projects",
-      value: projects.length,
-      suffix: "",
-      caption: "Project aktif di portfolio.",
-    },
-    {
-      label: "Tech engines",
-      value: toolLogos.length,
-      suffix: "",
-      caption: "Visual stack yang tampil.",
-    },
+    { label: "Local visits", value: visits, suffix: "x", caption: "Kunjungan di browser kamu." },
+    { label: "Projects", value: projects.length, suffix: "", caption: "Project aktif di portfolio." },
+    { label: "Tech engines", value: toolLogos.length, suffix: "", caption: "Visual stack yang tampil." },
   ];
 
   return (
     <section className="metrics-grid reveal" aria-label="Live portfolio stats">
       {metrics.map((metric) => (
-        <article key={metric.label} className="metric-card">
+        <article key={metric.label} className="metric-card" data-cursor="Metric">
           <small>{metric.label}</small>
           <CountUp value={metric.value} suffix={metric.suffix} />
           <span>{metric.caption}</span>
         </article>
       ))}
 
-      <article className="metric-card">
+      <article className="metric-card" data-cursor="Live">
         <small>Jakarta time</small>
         <span className="metric-value">{clock}</span>
         <span>Realtime clock for living interface.</span>
@@ -717,7 +790,6 @@ function PrincipleIcon({ type }: { type: VisualPrinciple["icon"] }) {
   if (type === "layers") return <Layers3 />;
   if (type === "motion") return <Orbit />;
   if (type === "code") return <Code2 />;
-
   return <Gauge />;
 }
 
@@ -738,6 +810,7 @@ function About() {
             key={item.title}
             className="principle-card click-card"
             type="button"
+            data-cursor="Focus"
             onClick={(event) => registerInteraction(event.currentTarget)}
           >
             <span className="card-icon">
@@ -761,11 +834,7 @@ function ProjectDeck() {
     rotateX: 0,
     rotateY: 0,
     scale: 1,
-    config: {
-      mass: 1,
-      tension: 260,
-      friction: 18,
-    },
+    config: { mass: 1, tension: 260, friction: 18 },
   }));
 
   const handleMove = (event: ReactPointerEvent<HTMLElement>) => {
@@ -785,11 +854,7 @@ function ProjectDeck() {
   };
 
   const reset = () => {
-    api.start({
-      rotateX: 0,
-      rotateY: 0,
-      scale: 1,
-    });
+    api.start({ rotateX: 0, rotateY: 0, scale: 1 });
   };
 
   return (
@@ -812,6 +877,7 @@ function ProjectDeck() {
               key={project.title}
               className={`project-tab ${index === activeIndex ? "is-active" : ""}`}
               type="button"
+              data-cursor="Select"
               onClick={(event) => {
                 setActiveIndex(index);
                 registerInteraction(event.currentTarget);
@@ -826,6 +892,7 @@ function ProjectDeck() {
 
         <animated.article
           className="deck-preview"
+          data-cursor="Tilt"
           onMouseMove={handleMove}
           onMouseLeave={reset}
           style={{
@@ -838,25 +905,10 @@ function ProjectDeck() {
             <motion.div
               key={activeProject.title}
               className="deck-preview-inner"
-              initial={{
-                opacity: 0,
-                y: 18,
-                filter: "blur(12px)",
-              }}
-              animate={{
-                opacity: 1,
-                y: 0,
-                filter: "blur(0px)",
-              }}
-              exit={{
-                opacity: 0,
-                y: -18,
-                filter: "blur(12px)",
-              }}
-              transition={{
-                duration: 0.32,
-                ease: "easeOut",
-              }}
+              initial={{ opacity: 0, y: 18, filter: "blur(12px)" }}
+              animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+              exit={{ opacity: 0, y: -18, filter: "blur(12px)" }}
+              transition={{ duration: 0.32, ease: "easeOut" }}
             >
               <div className="deck-toolbar">
                 <span />
@@ -886,7 +938,7 @@ function ProjectDeck() {
                 ))}
               </div>
 
-              <MagneticButton href={activeProject.href ?? "#"} variant="primary">
+              <MagneticButton href={activeProject.href ?? "#"} variant="primary" cursor="Open">
                 Open project <ArrowUpRight size={18} />
               </MagneticButton>
             </motion.div>
@@ -915,29 +967,14 @@ function TechInspector() {
       </div>
 
       <div className="tech-inspector reveal">
-        <aside className="tech-stage">
+        <aside className="tech-stage" data-cursor="Stack">
           <AnimatePresence mode="wait">
             <motion.div
               key={activeTool.name}
-              initial={{
-                opacity: 0,
-                scale: 0.96,
-                filter: "blur(12px)",
-              }}
-              animate={{
-                opacity: 1,
-                scale: 1,
-                filter: "blur(0px)",
-              }}
-              exit={{
-                opacity: 0,
-                scale: 0.96,
-                filter: "blur(12px)",
-              }}
-              transition={{
-                duration: 0.28,
-                ease: "easeOut",
-              }}
+              initial={{ opacity: 0, scale: 0.96, filter: "blur(12px)" }}
+              animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
+              exit={{ opacity: 0, scale: 0.96, filter: "blur(12px)" }}
+              transition={{ duration: 0.28, ease: "easeOut" }}
             >
               <img src={activeTool.icon} alt={`${activeTool.name} logo`} />
               <p className="eyebrow">{activeTool.label}</p>
@@ -953,6 +990,7 @@ function TechInspector() {
               key={tool.name}
               type="button"
               className={`tech-button ${index === activeIndex ? "is-active" : ""}`}
+              data-cursor="Inspect"
               onClick={(event) => {
                 setActiveIndex(index);
                 registerInteraction(event.currentTarget);
@@ -975,7 +1013,9 @@ function TechInspector() {
 
       <div className="capability-grid reveal">
         {capabilities.map((item) => (
-          <span key={item}>{item}</span>
+          <span key={item} data-cursor="Skill">
+            {item}
+          </span>
         ))}
       </div>
     </section>
@@ -1003,6 +1043,7 @@ function Experience() {
               key={`${item.period}-${item.role}`}
               type="button"
               className={index === activeIndex ? "is-active" : ""}
+              data-cursor="Read"
               onClick={() => setActiveIndex(index)}
             >
               {item.period}
@@ -1038,11 +1079,11 @@ function Contact() {
       </p>
 
       <div className="contact-actions">
-        <MagneticButton href={emailHref} variant="primary">
+        <MagneticButton href={emailHref} variant="primary" cursor="Mail">
           {profile.email} <Mail size={18} />
         </MagneticButton>
 
-        <MagneticButton href={profile.github} external>
+        <MagneticButton href={profile.github} external cursor="GitHub">
           GitHub <GithubIcon size={18} />
         </MagneticButton>
       </div>
@@ -1062,6 +1103,7 @@ function App() {
     <main onPointerMove={handlePointerMove}>
       <ShaderBackdrop />
       <AntigravityParticles />
+      <CustomCursor />
 
       <div className="noise" aria-hidden="true" />
       <div className="cursor-glow" aria-hidden="true" />
@@ -1079,6 +1121,9 @@ function App() {
         <span>© 2026 {profile.name}</span>
         <span>Designed for {profile.brand}</span>
       </footer>
+
+      <Analytics />
+      <SpeedInsights />
     </main>
   );
 }
