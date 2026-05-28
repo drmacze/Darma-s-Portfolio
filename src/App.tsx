@@ -6,6 +6,7 @@ import {
   type CSSProperties,
   type PointerEvent as ReactPointerEvent,
   type ReactNode,
+  type TouchEvent as ReactTouchEvent,
 } from "react";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/react";
@@ -39,10 +40,35 @@ import {
   techStack,
   toolLogos,
   visualPrinciples,
+  type Project,
   type VisualPrinciple,
 } from "./data/portfolio";
 
 gsap.registerPlugin(ScrollTrigger);
+
+const projectVisualProfiles = [
+  {
+    label: "Interface System",
+    accent: "198,167,107",
+    soft: "244,239,228",
+    mark: "UI",
+    pattern: "modular-grid",
+  },
+  {
+    label: "Motion Direction",
+    accent: "169,129,99",
+    soft: "198,167,107",
+    mark: "MX",
+    pattern: "cinematic-ribbon",
+  },
+  {
+    label: "Digital Product",
+    accent: "130,123,112",
+    soft: "244,239,228",
+    mark: "DX",
+    pattern: "signal-field",
+  },
+];
 
 function useReducedMotionPreference() {
   return useMemo(() => {
@@ -64,6 +90,43 @@ function registerInteraction(element?: HTMLElement) {
       duration: 220,
       easing: "cubic-bezier(0.16, 1, 0.3, 1)",
     },
+  );
+}
+
+function LoadingScreen({ isVisible }: { isVisible: boolean }) {
+  return (
+    <AnimatePresence>
+      {isVisible ? (
+        <motion.div
+          className="loading-screen"
+          initial={{ opacity: 1 }}
+          exit={{
+            opacity: 0,
+            filter: "blur(16px)",
+            transition: { duration: 0.72, ease: [0.16, 1, 0.3, 1] },
+          }}
+        >
+          <div className="loading-inner">
+            <div className="loading-meta">
+              <span>Dlavie Project</span>
+              <span>VFX Engine 0.9</span>
+            </div>
+
+            <div className="loading-title">
+              <span>Darma</span>
+              <span>Dlavie</span>
+            </div>
+
+            <div className="loading-line" />
+
+            <div className="loading-footer">
+              <span>Initializing interface</span>
+              <span>Shader / Motion / System</span>
+            </div>
+          </div>
+        </motion.div>
+      ) : null}
+    </AnimatePresence>
   );
 }
 
@@ -578,11 +641,29 @@ function MagneticButton({
   );
 }
 
-function ProjectVisualStage({ activeIndex }: { activeIndex: number }) {
+function ProjectVisualStage({
+  activeIndex,
+  project,
+}: {
+  activeIndex: number;
+  project: Project;
+}) {
+  const profileIndex = activeIndex % projectVisualProfiles.length;
+  const visual = projectVisualProfiles[profileIndex];
   const visibleLogos = toolLogos.slice(0, 5);
 
   return (
-    <div className="project-visual-stage" aria-hidden="true" data-project={activeIndex}>
+    <div
+      className={`project-visual-stage ${visual.pattern}`}
+      aria-hidden="true"
+      data-project={activeIndex}
+      style={
+        {
+          "--project-accent": visual.accent,
+          "--project-soft": visual.soft,
+        } as CSSProperties
+      }
+    >
       <div className="visual-grid" />
       <div className="visual-ribbon visual-ribbon-a" />
       <div className="visual-ribbon visual-ribbon-b" />
@@ -602,9 +683,13 @@ function ProjectVisualStage({ activeIndex }: { activeIndex: number }) {
         ))}
       </div>
 
+      <div className="visual-identity-mark">
+        <span>{visual.mark}</span>
+      </div>
+
       <div className="visual-caption">
-        <span>Touch / Swipe / Select</span>
-        <strong>Interactive Preview</strong>
+        <span>{visual.label}</span>
+        <strong>{project.title}</strong>
       </div>
     </div>
   );
@@ -633,7 +718,7 @@ function Navbar() {
         ))}
       </nav>
 
-      <span className="engine-badge">VFX ENGINE 0.8</span>
+      <span className="engine-badge">VFX ENGINE 0.9</span>
     </header>
   );
 }
@@ -883,11 +968,11 @@ function ProjectDeck() {
     api.start({ rotateX: 0, rotateY: 0, scale: 1 });
   };
 
-  const handleTouchStart = (event: React.TouchEvent<HTMLElement>) => {
+  const handleTouchStart = (event: ReactTouchEvent<HTMLElement>) => {
     touchStartX.current = event.touches[0]?.clientX ?? null;
   };
 
-  const handleTouchEnd = (event: React.TouchEvent<HTMLElement>) => {
+  const handleTouchEnd = (event: ReactTouchEvent<HTMLElement>) => {
     const start = touchStartX.current;
     const end = event.changedTouches[0]?.clientX ?? null;
 
@@ -957,7 +1042,7 @@ function ProjectDeck() {
             }),
           }}
         >
-          <ProjectVisualStage activeIndex={activeIndex} />
+          <ProjectVisualStage activeIndex={activeIndex} project={activeProject} />
 
           <AnimatePresence mode="wait">
             <motion.div
@@ -1012,6 +1097,7 @@ function ProjectDeck() {
                   >
                     Prev
                   </button>
+
                   <button
                     type="button"
                     data-cursor="Next"
@@ -1177,7 +1263,18 @@ function Contact() {
 }
 
 function App() {
+  const reducedMotion = useReducedMotionPreference();
+  const [isLoading, setIsLoading] = useState(true);
+
   useMotionSystem();
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      setIsLoading(false);
+    }, reducedMotion ? 350 : 1350);
+
+    return () => window.clearTimeout(timer);
+  }, [reducedMotion]);
 
   const handlePointerMove = (event: ReactPointerEvent<HTMLElement>) => {
     document.documentElement.style.setProperty("--cursor-x", `${event.clientX}px`);
@@ -1186,6 +1283,8 @@ function App() {
 
   return (
     <main onPointerMove={handlePointerMove}>
+      <LoadingScreen isVisible={isLoading} />
+
       <ShaderBackdrop />
       <AntigravityParticles />
       <CustomCursor />
