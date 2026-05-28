@@ -1,0 +1,273 @@
+:root {
+  --ink: #070707;
+  --ink-soft: #10100f;
+  --panel: rgba(238, 231, 218, 0.055);
+  --panel-strong: rgba(238, 231, 218, 0.09);
+  --ivory: #f4efe5;
+  --muted: #aaa298;
+  --gold: #c6a76b;
+  --violet: #c6a76b;
+  --blue: #a98163;
+  --cyan: #d6c099;
+  --line: rgba(244, 239, 228, 0.115);
+  --line-strong: rgba(198, 167, 107, 0.38);
+}
+
+html,
+body {
+  background: var(--ink);
+}
+
+.shader-backdrop {
+  background: #070707 !important;
+}
+
+.aurora-shader {
+  filter: saturate(0.72) contrast(1.06) sepia(0.14) !important;
+  opacity: 0.82 !important;
+}
+
+.antigravity-canvas,
+.particles-layer {
+  opacity: 0.38 !important;
+  filter: saturate(0.74) brightness(0.95) !important;
+}
+
+.welcome-gateway {
+  background:
+    radial-gradient(circle at 18% 20%, rgba(198, 167, 107, 0.12), transparent 28rem),
+    radial-gradient(circle at 80% 74%, rgba(169, 129, 99, 0.09), transparent 22rem),
+    linear-gradient(135deg, #070707, #11100f 58%, #070707) !important;
+}
+
+.welcome-gateway::before {
+  opacity: 0.34 !important;
+  background:
+    linear-gradient(rgba(244, 239, 228, 0.026) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(244, 239, 228, 0.026) 1px, transparent 1px) !important;
+  background-size: 72px 72px !important;
+}
+
+.welcome-gateway::after {
+  background: linear-gradient(90deg, transparent, rgba(198, 167, 107, 0.72), transparent) !important;
+}
+
+.welcome-eyebrow,
+.visual-caption span,
+.deck-toolbar small,
+.project-tab span,
+.metric-card small,
+.timeline-detail small,
+.engine-badge,
+.ai-typewriter,
+.rotating-shell {
+  color: var(--gold) !important;
+}
+
+.welcome-text-shell {
+  gap: 24px !important;
+}
+
+.welcome-text-shell h1 {
+  max-width: 980px;
+  color: var(--ivory) !important;
+  letter-spacing: -0.085em !important;
+}
+
+.welcome-text-shell h1 span:nth-child(3),
+.hero-copy h1,
+.shiny-text {
+  background: linear-gradient(110deg, var(--ivory), #d6c099, var(--muted), var(--ivory)) !important;
+  background-size: 260% 100% !important;
+  -webkit-background-clip: text !important;
+  background-clip: text !important;
+  color: transparent !important;
+}
+
+.welcome-description {
+  max-width: 620px !important;
+  color: #b7aea2 !important;
+}
+
+.welcome-scroll-hint,
+.mini-rotator,
+.hero-typewriter,
+.signal-track span,
+.logo-pill,
+.tag-row span,
+.capability-grid span {
+  border-color: rgba(244, 239, 228, 0.12) !important;
+  background: rgba(244, 239, 228, 0.045) !important;
+}
+
+.welcome-scroll-hint span {
+  background: var(--gold) !important;
+  box-shadow: 0 0 20px rgba(198, 167, 107, 0.46) !important;
+}
+
+.site-header {
+  background: rgba(7, 7, 7, 0.68) !important;
+  border-color: rgba(244, 239, 228, 0.11) !important;
+}
+
+.engine-badge {
+  border-color: rgba(198, 167, 107, 0.32) !important;
+  background: rgba(7, 7, 7, 0.86) !important;
+}
+
+.cursor-glow {
+  background: radial-gradient(580px circle at var(--cursor-x) var(--cursor-y), rgba(198, 167, 107, 0.12), transparent 46%) !important;
+}
+
+.custom-cursor {
+  border-color: rgba(198, 167, 107, 0.42) !important;
+  background: rgba(7, 7, 7, 0.66) !important;
+}
+
+.magnetic-button.primary {
+  border-color: rgba(198, 167, 107, 0.56) !important;
+  background: linear-gradient(135deg, #d6c099, #a98163) !important;
+  color: #090909 !important;
+  box-shadow: 0 18px 70px rgba(198, 167, 107, 0.18) !important;
+}
+
+.hero,
+.stage-hero {
+  padding-top: 86px !important;
+  padding-bottom: 34px !important;
+}
+
+.content-section {
+  padding-top: 44px !important;
+  padding-bottom: 44px !important;
+}
+
+.metric-card,
+.project-tab,
+.tech-stage,
+.tech-button,
+.timeline-detail,
+.principle-card,
+.deck-preview,
+.hero-panel,
+.interactive-orb-panel {
+  border-color: rgba(244, 239, 228, 0.115) !important;
+  background-color: rgba(244, 239, 228, 0.048) !important;
+  box-shadow: 0 22px 88px rgba(0, 0, 0, 0.24) !important;
+}
+
+.metric-card {
+  min-height: 112px !important;
+  padding: 16px !important;
+}
+
+.metric-card::after,
+.tech-stage-reactor {
+  background: radial-gradient(circle, rgba(198, 167, 107, 0.14), transparent 65%) !important;
+}
+
+.project-tab,
+.tech-button {
+  min-height: 108px !important;
+}
+
+.project-tab:hover,
+.project-tab.is-active,
+.tech-button:hover,
+.tech-button.is-active,
+.timeline-tabs button:hover,
+.timeline-tabs button.is-active {
+  border-color: rgba(198, 167, 107, 0.42) !important;
+  background: rgba(198, 167, 107, 0.092) !important;
+  filter: drop-shadow(0 16px 28px rgba(198, 167, 107, 0.09)) !important;
+}
+
+.deck-preview {
+  min-height: 500px !important;
+  background:
+    radial-gradient(circle at 75% 18%, rgba(198, 167, 107, 0.14), transparent 20rem),
+    radial-gradient(circle at 28% 70%, rgba(244, 239, 228, 0.045), transparent 18rem),
+    rgba(244, 239, 228, 0.045) !important;
+}
+
+.visual-ribbon-a {
+  background: rgba(198, 167, 107, 0.22) !important;
+}
+
+.visual-ribbon-b {
+  background: rgba(169, 129, 99, 0.14) !important;
+}
+
+.visual-orb {
+  background: radial-gradient(circle at 30% 30%, rgba(244, 239, 228, 0.56), rgba(198, 167, 107, 0.16) 42%, transparent 70%) !important;
+}
+
+.visual-identity-mark {
+  color: rgba(244, 239, 228, 0.34) !important;
+}
+
+.deck-orbit {
+  border-color: rgba(198, 167, 107, 0.26) !important;
+  color: var(--gold) !important;
+}
+
+.music-island {
+  top: 16px !important;
+  width: min(calc(100% - 28px), 430px) !important;
+  min-height: 44px !important;
+  grid-template-columns: auto auto minmax(84px, 1fr) auto !important;
+  padding: 6px 8px !important;
+  border-color: rgba(244, 239, 228, 0.12) !important;
+  background: rgba(7, 7, 7, 0.76) !important;
+  box-shadow: 0 16px 58px rgba(0, 0, 0, 0.34) !important;
+}
+
+.music-island.is-playing {
+  border-color: rgba(198, 167, 107, 0.36) !important;
+  box-shadow: 0 16px 58px rgba(0, 0, 0, 0.34), 0 0 34px rgba(198, 167, 107, 0.1) !important;
+}
+
+.music-equalizer span {
+  background: var(--gold) !important;
+}
+
+.music-toggle,
+.music-next,
+.music-spotify {
+  min-height: 32px !important;
+  border-color: rgba(244, 239, 228, 0.12) !important;
+  background: rgba(244, 239, 228, 0.052) !important;
+}
+
+.music-copy span {
+  font-size: 0.76rem !important;
+}
+
+.music-copy strong {
+  font-size: 0.62rem !important;
+}
+
+.music-spotify {
+  display: none !important;
+}
+
+@media (max-width: 980px) {
+  .music-island {
+    top: auto !important;
+    bottom: 12px !important;
+  }
+}
+
+@media (max-width: 620px) {
+  .welcome-text-shell h1 {
+    font-size: clamp(3.25rem, 16vw, 6rem) !important;
+  }
+
+  .deck-preview {
+    min-height: 620px !important;
+  }
+
+  .music-island {
+    width: min(calc(100% - 20px), 390px) !important;
+  }
+}
