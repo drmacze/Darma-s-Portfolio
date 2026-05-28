@@ -1,0 +1,401 @@
+html {
+  scroll-behavior: smooth;
+  scroll-snap-type: y mandatory;
+  overflow-y: auto;
+}
+
+body {
+  overscroll-behavior-y: contain;
+}
+
+.dlavie-page {
+  position: relative !important;
+  min-height: 100svh !important;
+  scroll-snap-align: start !important;
+  scroll-snap-stop: always !important;
+  display: grid !important;
+  align-content: center !important;
+  isolation: isolate !important;
+  overflow: hidden !important;
+  transform-origin: center !important;
+  transition:
+    opacity 580ms cubic-bezier(0.16, 1, 0.3, 1),
+    filter 580ms cubic-bezier(0.16, 1, 0.3, 1),
+    transform 580ms cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.dlavie-page.is-before {
+  opacity: 0.18 !important;
+  filter: blur(16px) brightness(0.72) !important;
+  transform: translateY(-6vh) scale(0.965) !important;
+}
+
+.dlavie-page.is-after {
+  opacity: 0.28 !important;
+  filter: blur(10px) brightness(0.82) !important;
+  transform: translateY(6vh) scale(0.975) !important;
+}
+
+.dlavie-page.is-active {
+  opacity: 1 !important;
+  filter: blur(0) brightness(1) !important;
+  transform: translateY(0) scale(1) !important;
+}
+
+.gemini-page-chrome {
+  position: absolute;
+  inset: 24px 24px auto 24px;
+  z-index: 8;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  pointer-events: none;
+}
+
+.gemini-page-mark {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 42px;
+  padding: 6px 14px 6px 7px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 999px;
+  background: rgba(7, 8, 18, 0.58);
+  color: #f8fafc;
+  box-shadow: 0 16px 60px rgba(0, 0, 0, 0.28);
+  backdrop-filter: blur(22px);
+}
+
+.gemini-page-mark span {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  border-radius: 50%;
+  background: conic-gradient(from 180deg, #40c9ff, #7c3aed, #ff4ecd, #36f6c3, #40c9ff);
+  color: #050509;
+  font-size: 1rem;
+  font-weight: 950;
+  animation: gemini-icon-pulse 2.6s ease-in-out infinite;
+}
+
+.gemini-page-mark small,
+.gemini-page-meta strong,
+.gemini-page-meta span {
+  font-size: 0.68rem;
+  font-weight: 950;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.gemini-page-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 42px;
+  padding: 0 14px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  background: rgba(7, 8, 18, 0.52);
+  color: rgba(248, 250, 252, 0.76);
+  backdrop-filter: blur(22px);
+}
+
+.gemini-page-meta span {
+  color: #6ee7b7;
+}
+
+.gemini-page-glow {
+  position: absolute;
+  inset: 9% 8%;
+  z-index: -2;
+  border-radius: 46px;
+  background:
+    radial-gradient(circle at 25% 15%, rgba(64, 201, 255, 0.22), transparent 22rem),
+    radial-gradient(circle at 75% 22%, rgba(124, 58, 237, 0.2), transparent 20rem),
+    radial-gradient(circle at 56% 86%, rgba(255, 78, 205, 0.13), transparent 20rem),
+    radial-gradient(circle at 12% 80%, rgba(54, 246, 195, 0.14), transparent 18rem);
+  filter: blur(8px);
+  opacity: 0.72;
+  transform: scale(0.98);
+  animation: gemini-card-breathe 8s ease-in-out infinite;
+}
+
+.gemini-page-dust {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  opacity: 0.26;
+  background-image:
+    radial-gradient(circle, rgba(64, 201, 255, 0.8) 0 1px, transparent 1.5px),
+    radial-gradient(circle, rgba(255, 78, 205, 0.65) 0 1px, transparent 1.5px),
+    radial-gradient(circle, rgba(54, 246, 195, 0.65) 0 1px, transparent 1.5px),
+    radial-gradient(circle, rgba(255, 255, 255, 0.44) 0 1px, transparent 1.5px);
+  background-size: 67px 67px, 89px 89px, 113px 113px, 151px 151px;
+  background-position: 0 0, 20px 30px, 42px 14px, 11px 58px;
+  mask-image: radial-gradient(circle at 50% 50%, black, transparent 75%);
+  animation: gemini-dust-drift 22s linear infinite;
+}
+
+.dlavie-logo-dust-canvas {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  opacity: 0.58;
+  mix-blend-mode: screen;
+  filter: saturate(1.2) contrast(1.06);
+}
+
+.site-header,
+.music-island,
+.music-pill,
+.custom-cursor,
+.gemini-page-nav {
+  z-index: 150 !important;
+}
+
+.gemini-page-nav {
+  position: fixed;
+  right: 18px;
+  top: 50%;
+  display: grid;
+  gap: 10px;
+  transform: translateY(-50%);
+}
+
+.gemini-page-dot {
+  width: 11px;
+  height: 11px;
+  padding: 0;
+  border: 1px solid rgba(248, 250, 252, 0.26);
+  border-radius: 999px;
+  background: rgba(248, 250, 252, 0.14);
+  cursor: pointer;
+  transition:
+    width 220ms ease,
+    background 220ms ease,
+    border-color 220ms ease,
+    box-shadow 220ms ease;
+}
+
+.gemini-page-dot.is-active {
+  width: 34px;
+  border-color: rgba(110, 231, 183, 0.75);
+  background: linear-gradient(90deg, #40c9ff, #7c3aed, #ff4ecd, #36f6c3);
+  box-shadow: 0 0 28px rgba(64, 201, 255, 0.32);
+}
+
+.hero,
+.stage-hero,
+.content-section,
+.workbench-section,
+.stack-section,
+.experience-section,
+.about-section,
+.contact-section,
+.metrics-grid,
+.signal-rail {
+  position: relative !important;
+  z-index: 4 !important;
+}
+
+.hero-copy h1,
+.section-intro h2,
+.contact-section h2 {
+  text-wrap: balance;
+}
+
+.metric-card,
+.project-tab,
+.deck-preview,
+.tech-stage,
+.tech-button,
+.principle-card,
+.timeline-detail,
+.contact-section,
+.hero-panel {
+  transform-origin: center;
+}
+
+.is-active .metric-card,
+.is-active .project-tab,
+.is-active .deck-preview,
+.is-active .tech-stage,
+.is-active .tech-button,
+.is-active .principle-card,
+.is-active .timeline-detail,
+.is-active .hero-panel {
+  animation: gemini-component-in 680ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.is-active .project-tab:nth-child(2),
+.is-active .tech-button:nth-child(2),
+.is-active .principle-card:nth-child(2),
+.is-active .metric-card:nth-child(2) {
+  animation-delay: 60ms;
+}
+
+.is-active .project-tab:nth-child(3),
+.is-active .tech-button:nth-child(3),
+.is-active .principle-card:nth-child(3),
+.is-active .metric-card:nth-child(3) {
+  animation-delay: 120ms;
+}
+
+.is-active .tech-button:nth-child(4),
+.is-active .principle-card:nth-child(4),
+.is-active .metric-card:nth-child(4) {
+  animation-delay: 180ms;
+}
+
+.hero-panel,
+.deck-preview,
+.tech-stage,
+.contact-section {
+  overflow: hidden;
+}
+
+.hero-panel::before,
+.deck-preview::before,
+.tech-stage::before,
+.contact-section::before {
+  position: absolute;
+  inset: 0;
+  content: "";
+  background:
+    radial-gradient(circle at 20% 20%, rgba(64, 201, 255, 0.16), transparent 15rem),
+    radial-gradient(circle at 80% 30%, rgba(255, 78, 205, 0.14), transparent 14rem),
+    radial-gradient(circle at 50% 95%, rgba(54, 246, 195, 0.12), transparent 18rem);
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+.hero-panel::after,
+.deck-preview::after,
+.tech-stage::after,
+.contact-section::after {
+  position: absolute;
+  inset: 0;
+  content: "";
+  background-image: radial-gradient(circle, rgba(255, 255, 255, 0.28) 0 1px, transparent 1.5px);
+  background-size: 28px 28px;
+  opacity: 0.08;
+  mask-image: radial-gradient(circle at 50% 50%, black, transparent 72%);
+  pointer-events: none;
+  animation: gemini-dust-drift 18s linear infinite reverse;
+}
+
+@keyframes gemini-component-in {
+  from {
+    opacity: 0;
+    filter: blur(18px);
+    transform: translateY(26px) scale(0.975);
+  }
+  to {
+    opacity: 1;
+    filter: blur(0);
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes gemini-card-breathe {
+  0%, 100% {
+    opacity: 0.58;
+    transform: scale(0.98) rotate(-0.5deg);
+  }
+  50% {
+    opacity: 0.95;
+    transform: scale(1.03) rotate(0.5deg);
+  }
+}
+
+@keyframes gemini-dust-drift {
+  to {
+    background-position: 67px 67px, -89px 89px, 113px -113px, -151px -151px;
+  }
+}
+
+@keyframes gemini-icon-pulse {
+  0%, 100% {
+    transform: scale(1) rotate(0deg);
+    box-shadow: 0 0 0 rgba(64, 201, 255, 0);
+  }
+  50% {
+    transform: scale(1.08) rotate(9deg);
+    box-shadow: 0 0 34px rgba(64, 201, 255, 0.42);
+  }
+}
+
+@media (max-width: 980px) {
+  html {
+    scroll-snap-type: y proximity;
+  }
+
+  .dlavie-page {
+    min-height: 100svh !important;
+  }
+
+  .gemini-page-chrome {
+    inset: 14px 14px auto 14px;
+  }
+
+  .gemini-page-meta {
+    display: none;
+  }
+
+  .gemini-page-nav {
+    right: 10px;
+    gap: 7px;
+  }
+
+  .gemini-page-dot {
+    width: 8px;
+    height: 8px;
+  }
+
+  .gemini-page-dot.is-active {
+    width: 24px;
+  }
+
+  .dlavie-logo-dust-canvas {
+    opacity: 0.34;
+  }
+}
+
+@media (max-width: 620px) {
+  .gemini-page-mark small {
+    display: none;
+  }
+
+  .gemini-page-mark {
+    min-height: 38px;
+    padding: 4px;
+  }
+
+  .gemini-page-mark span {
+    width: 30px;
+    height: 30px;
+  }
+
+  .gemini-page-nav {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-snap-type: none;
+  }
+
+  .dlavie-page,
+  .gemini-page-glow,
+  .gemini-page-dust,
+  .gemini-page-mark span,
+  .dlavie-logo-dust-canvas {
+    animation: none !important;
+    transition: none !important;
+  }
+}
