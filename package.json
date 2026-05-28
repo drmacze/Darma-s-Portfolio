@@ -1,7 +1,7 @@
 {
   "name": "darma-dlavie-portfolio",
   "private": true,
-  "version": "0.5.0",
+  "version": "0.6.0",
   "type": "module",
   "engines": {
     "node": ">=20.0.0"
@@ -16,13 +16,19 @@
     "@react-three/drei": "latest",
     "@react-three/fiber": "latest",
     "@react-three/postprocessing": "latest",
+    "@react-three/xr": "latest",
+    "@theatre/core": "latest",
+    "@theatre/r3f": "latest",
     "@use-gesture/react": "latest",
+    "@vercel/analytics": "latest",
+    "@vercel/speed-insights": "latest",
     "animejs": "latest",
     "canvas-confetti": "latest",
     "framer-motion": "latest",
     "gsap": "latest",
     "howler": "latest",
     "lenis": "latest",
+    "lottie-react": "latest",
     "lucide-react": "latest",
     "maath": "latest",
     "matter-js": "latest",
@@ -30,11 +36,16 @@
     "postprocessing": "latest",
     "react": "latest",
     "react-dom": "latest",
+    "react-intersection-observer": "latest",
     "simplex-noise": "latest",
+    "splitting": "latest",
     "three": "latest",
-    "three-stdlib": "latest"
+    "three-stdlib": "latest",
+    "typewriter-effect": "latest",
+    "zustand": "latest"
   },
   "devDependencies": {
+    "@theatre/studio": "latest",
     "@types/canvas-confetti": "latest",
     "@types/matter-js": "latest",
     "@types/react": "latest",
