@@ -1,29 +1,47 @@
 {
   "name": "darma-dlavie-portfolio",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.3.0",
   "type": "module",
+  "engines": {
+    "node": ">=20.0.0"
+  },
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
     "preview": "vite preview"
   },
   "dependencies": {
-    "@react-spring/web": "^9.7.5",
-    "@use-gesture/react": "^10.3.1",
-    "framer-motion": "^11.11.17",
-    "gsap": "^3.12.5",
-    "lenis": "^1.1.14",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "three": "^0.170.0"
+    "@react-spring/web": "latest",
+    "@react-three/drei": "latest",
+    "@react-three/fiber": "latest",
+    "@react-three/postprocessing": "latest",
+    "@use-gesture/react": "latest",
+    "animejs": "latest",
+    "canvas-confetti": "latest",
+    "framer-motion": "latest",
+    "gsap": "latest",
+    "howler": "latest",
+    "lenis": "latest",
+    "lucide-react": "latest",
+    "maath": "latest",
+    "matter-js": "latest",
+    "motion": "latest",
+    "postprocessing": "latest",
+    "react": "latest",
+    "react-dom": "latest",
+    "simplex-noise": "latest",
+    "three": "latest",
+    "three-stdlib": "latest"
   },
   "devDependencies": {
-    "@types/react": "^18.3.12",
-    "@types/react-dom": "^18.3.1",
-    "@types/three": "^0.170.0",
-    "@vitejs/plugin-react": "^4.3.4",
-    "typescript": "^5.6.3",
-    "vite": "^5.4.11"
+    "@types/canvas-confetti": "latest",
+    "@types/matter-js": "latest",
+    "@types/react": "latest",
+    "@types/react-dom": "latest",
+    "@types/three": "latest",
+    "@vitejs/plugin-react": "latest",
+    "typescript": "latest",
+    "vite": "latest"
   }
 }
