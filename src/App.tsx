@@ -303,13 +303,13 @@ function CustomCursor() {
 
   useEffect(() => {
     const pointerMove = (event: PointerEvent) => {
+      const target = event.target instanceof Element ? event.target.closest<HTMLElement>("[data-cursor]") : null;
+
       api.start({
         x: event.clientX,
         y: event.clientY,
-        scale: visible ? 1 : 0.72,
+        scale: target ? 1 : 0.72,
       });
-
-      const target = event.target instanceof Element ? event.target.closest<HTMLElement>("[data-cursor]") : null;
 
       if (target) {
         setLabel(target.dataset.cursor || "Open");
@@ -322,7 +322,7 @@ function CustomCursor() {
 
     window.addEventListener("pointermove", pointerMove);
     return () => window.removeEventListener("pointermove", pointerMove);
-  }, [api, visible]);
+  }, [api]);
 
   return (
     <animated.div
@@ -418,18 +418,6 @@ function SplitHeading({ children }: { children: string }) {
           <span className="split-word" style={{ "--i": index } as CSSProperties}>
             {word}
           </span>
-        </span>
-      ))}
-    </span>
-  );
-}
-
-function BlurText({ text }: { text: string }) {
-  return (
-    <span className="blur-text" aria-label={text}>
-      {text.split(" ").map((word, index) => (
-        <span key={`${word}-${index}`} className="blur-word" style={{ "--i": index } as CSSProperties}>
-          {word}
         </span>
       ))}
     </span>
@@ -590,6 +578,38 @@ function MagneticButton({
   );
 }
 
+function ProjectVisualStage({ activeIndex }: { activeIndex: number }) {
+  const visibleLogos = toolLogos.slice(0, 5);
+
+  return (
+    <div className="project-visual-stage" aria-hidden="true" data-project={activeIndex}>
+      <div className="visual-grid" />
+      <div className="visual-ribbon visual-ribbon-a" />
+      <div className="visual-ribbon visual-ribbon-b" />
+      <div className="visual-orb visual-orb-primary" />
+      <div className="visual-orb visual-orb-secondary" />
+      <div className="visual-scanline" />
+
+      <div className="visual-logo-cluster">
+        {visibleLogos.map((tool, index) => (
+          <span
+            key={tool.name}
+            className="visual-logo"
+            style={{ "--i": index } as CSSProperties}
+          >
+            <img src={tool.icon} alt="" loading="lazy" />
+          </span>
+        ))}
+      </div>
+
+      <div className="visual-caption">
+        <span>Touch / Swipe / Select</span>
+        <strong>Interactive Preview</strong>
+      </div>
+    </div>
+  );
+}
+
 function Navbar() {
   const links = [
     ["Stage", "#top"],
@@ -613,7 +633,7 @@ function Navbar() {
         ))}
       </nav>
 
-      <span className="engine-badge">VFX ENGINE 0.7</span>
+      <span className="engine-badge">VFX ENGINE 0.8</span>
     </header>
   );
 }
@@ -829,6 +849,7 @@ function About() {
 function ProjectDeck() {
   const [activeIndex, setActiveIndex] = useState(0);
   const activeProject = projects[activeIndex] ?? projects[0];
+  const touchStartX = useRef<number | null>(null);
 
   const [{ rotateX, rotateY, scale }, api] = useSpring(() => ({
     rotateX: 0,
@@ -836,6 +857,11 @@ function ProjectDeck() {
     scale: 1,
     config: { mass: 1, tension: 260, friction: 18 },
   }));
+
+  const goToProject = (nextIndex: number) => {
+    const resolvedIndex = (nextIndex + projects.length) % projects.length;
+    setActiveIndex(resolvedIndex);
+  };
 
   const handleMove = (event: ReactPointerEvent<HTMLElement>) => {
     const rect = event.currentTarget.getBoundingClientRect();
@@ -857,6 +883,34 @@ function ProjectDeck() {
     api.start({ rotateX: 0, rotateY: 0, scale: 1 });
   };
 
+  const handleTouchStart = (event: React.TouchEvent<HTMLElement>) => {
+    touchStartX.current = event.touches[0]?.clientX ?? null;
+  };
+
+  const handleTouchEnd = (event: React.TouchEvent<HTMLElement>) => {
+    const start = touchStartX.current;
+    const end = event.changedTouches[0]?.clientX ?? null;
+
+    touchStartX.current = null;
+
+    if (start === null || end === null) return;
+
+    const delta = end - start;
+
+    if (Math.abs(delta) < 42) {
+      registerInteraction(event.currentTarget);
+      return;
+    }
+
+    if (delta < 0) {
+      goToProject(activeIndex + 1);
+    } else {
+      goToProject(activeIndex - 1);
+    }
+
+    registerInteraction(event.currentTarget);
+  };
+
   return (
     <section id="workbench" className="content-section workbench-section">
       <div className="section-intro reveal">
@@ -865,8 +919,8 @@ function ProjectDeck() {
           Select a project. Feel the interface <RotatingText words={["respond", "tilt", "glow", "move"]} />.
         </h2>
         <p>
-          Project tidak lagi hanya list panjang. Section ini dibuat seperti interactive deck agar pengunjung punya alasan
-          untuk klik, hover, dan eksplorasi.
+          Project tidak lagi hanya list panjang. Section ini dibuat seperti interactive deck agar pengunjung desktop
+          dan mobile sama-sama bisa klik, tap, swipe, dan eksplorasi.
         </p>
       </div>
 
@@ -895,12 +949,16 @@ function ProjectDeck() {
           data-cursor="Tilt"
           onMouseMove={handleMove}
           onMouseLeave={reset}
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
           style={{
             transform: to([rotateX, rotateY, scale], (nextX, nextY, nextScale) => {
               return `perspective(1000px) rotateX(${nextX}deg) rotateY(${nextY}deg) scale(${nextScale})`;
             }),
           }}
         >
+          <ProjectVisualStage activeIndex={activeIndex} />
+
           <AnimatePresence mode="wait">
             <motion.div
               key={activeProject.title}
@@ -938,9 +996,34 @@ function ProjectDeck() {
                 ))}
               </div>
 
-              <MagneticButton href={activeProject.href ?? "#"} variant="primary" cursor="Open">
-                Open project <ArrowUpRight size={18} />
-              </MagneticButton>
+              <div className="deck-actions">
+                <MagneticButton href={activeProject.href ?? "#"} variant="primary" cursor="Open">
+                  Open project <ArrowUpRight size={18} />
+                </MagneticButton>
+
+                <div className="project-swipe-controls" aria-label="Project controls">
+                  <button
+                    type="button"
+                    data-cursor="Prev"
+                    onClick={(event) => {
+                      goToProject(activeIndex - 1);
+                      registerInteraction(event.currentTarget);
+                    }}
+                  >
+                    Prev
+                  </button>
+                  <button
+                    type="button"
+                    data-cursor="Next"
+                    onClick={(event) => {
+                      goToProject(activeIndex + 1);
+                      registerInteraction(event.currentTarget);
+                    }}
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
             </motion.div>
           </AnimatePresence>
         </animated.article>
@@ -968,6 +1051,8 @@ function TechInspector() {
 
       <div className="tech-inspector reveal">
         <aside className="tech-stage" data-cursor="Stack">
+          <div className="tech-stage-reactor" aria-hidden="true" />
+
           <AnimatePresence mode="wait">
             <motion.div
               key={activeTool.name}
