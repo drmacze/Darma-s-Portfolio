@@ -31,7 +31,7 @@ export type VisualPrinciple = {
 export const profile = {
   name: "Darma",
   brand: "Dlavie",
-  role: "Developer",
+  role: "Creative Developer",
   location: "Indonesia",
   availability: "Open for collaboration",
   email: "your-email@example.com",
@@ -39,56 +39,59 @@ export const profile = {
   instagram: "#",
   linkedin: "#",
 
-  // TODO: Ganti setelah kamu kirim/siapkan foto.
+  // TODO: Ganti setelah kamu siapkan foto.
   // Taruh file di public/images/darma-profile.jpg lalu ubah menjadi: "/images/darma-profile.jpg"
   avatar: "",
 
-  // TODO: Ini placeholder. Nanti jawab pertanyaan personalisasi agar copywriting bisa dibuat lebih tajam.
-  headline: "Designing refined web experiences with code, motion, and visual detail.",
+  headline: "Building Dlavie as a motion-first digital identity.",
   shortBio:
-    "Portfolio ini masih memakai placeholder. Isi dengan deskripsi singkat tentang Darma, fokus development kamu, dan value yang kamu bawa sebagai developer Dlavie.",
+    "Darma membangun interface yang terasa hidup: cepat, responsif, visual, dan punya arah produk. Portfolio ini dirancang sebagai stage interaktif, bukan sekadar halaman teks statis.",
   longBio:
-    "Bagian ini disiapkan untuk cerita personal kamu sebagai developer: perjalanan belajar, jenis project yang ingin kamu bangun, prinsip desain/kode, dan arah Dlavie sebagai identitas digital.",
+    "Dlavie adalah identitas digital untuk menggabungkan engineering, UI/UX, motion, dan eksperimen visual. Fokusnya bukan hanya membuat website berfungsi, tapi menciptakan pengalaman yang terlihat matang, terasa presisi, dan mudah dikembangkan menjadi produk nyata.",
 };
 
 export const stats = [
-  { value: "01", label: "Brand identity to refine" },
-  { value: "03+", label: "Core web skills to highlight" },
-  { value: "∞", label: "Motion and interaction experiments" },
+  { value: "03", label: "Interactive project slots" },
+  { value: "16", label: "Visual technology marks" },
+  { value: "60fps", label: "Motion-first experience" },
 ];
 
 export const visualPrinciples: VisualPrinciple[] = [
   {
-    title: "Editorial Layout",
-    description: "Section dibuat lebih visual dengan hierarchy, cards, dan rhythm agar tidak terasa seperti kumpulan teks polos.",
-    icon: "layers",
-  },
-  {
-    title: "Subtle Motion",
-    description: "Animasi tetap ada, tapi dibuat lebih elegan: smooth reveal, parallax ringan, dan ambient particles yang tidak norak.",
+    title: "Kinetic Welcome",
+    description: "First impression dibuat dengan teks bergerak, line motion, dan entrance flow yang bersih agar terasa seperti digital product intro.",
     icon: "motion",
   },
   {
-    title: "Clean Engineering",
-    description: "Konten dipisah dari komponen supaya mudah diedit, aman dideploy, dan tidak bergantung pada library berat yang tidak perlu.",
-    icon: "code",
+    title: "Icon-Rich Interface",
+    description: "Logo teknologi asli, glyph visual, chip stack, dan micro states dipakai untuk mengurangi kesan teks polos.",
+    icon: "layers",
   },
   {
-    title: "Performance Aware",
-    description: "Shader dan efek visual dipakai sebagai enhancement, dengan reduced-motion fallback untuk aksesibilitas dan device low-end.",
+    title: "Compact Composition",
+    description: "Box besar dikurangi. Section dibuat lebih rapat, visual, dan editorial supaya tidak boros tempat.",
     icon: "performance",
+  },
+  {
+    title: "Production Mindset",
+    description: "Efek visual tetap punya fallback, musik hanya opt-in, dan animasi diposisikan sebagai enhancement yang terkontrol.",
+    icon: "code",
   },
 ];
 
 export const capabilities = [
-  "Frontend Engineering",
-  "UI/UX Implementation",
-  "Responsive Web Design",
-  "Animation Systems",
-  "Three.js / Shader Experiments",
-  "Performance Optimization",
+  "Creative Frontend",
+  "Motion UI",
+  "WebGL Atmosphere",
+  "Responsive System",
   "Component Architecture",
-  "Creative Development",
+  "Shader Styling",
+  "Scroll Storytelling",
+  "Interactive Cards",
+  "Design Systems",
+  "Performance Pass",
+  "Mobile Touch UX",
+  "Product Thinking",
 ];
 
 export const toolLogos: ToolLogo[] = [
@@ -96,49 +99,97 @@ export const toolLogos: ToolLogo[] = [
     name: "React",
     label: "Interface",
     icon: "https://cdn.simpleicons.org/react/61DAFB",
-    description: "Component-driven UI dengan ekosistem modern.",
+    description: "Component-driven UI untuk membangun portfolio sebagai sistem, bukan halaman statis.",
   },
   {
     name: "TypeScript",
     label: "Safety",
     icon: "https://cdn.simpleicons.org/typescript/3178C6",
-    description: "Typed codebase agar struktur lebih aman dan maintainable.",
+    description: "Typed codebase agar struktur data, komponen, dan props lebih aman dikembangkan.",
   },
   {
     name: "Vite",
-    label: "Tooling",
+    label: "Build",
     icon: "https://cdn.simpleicons.org/vite/646CFF",
-    description: "Development server cepat dan build ringan.",
+    description: "Build tool modern untuk workflow cepat, HMR ringan, dan deployment sederhana.",
   },
   {
     name: "GSAP",
     label: "Timeline",
     icon: "https://cdn.simpleicons.org/greensock/88CE02",
-    description: "Scroll-triggered animation dan timeline yang presisi.",
+    description: "Scroll-triggered animation, entrance sequencing, dan motion orchestration.",
   },
   {
     name: "Three.js",
     label: "WebGL",
     icon: "https://cdn.simpleicons.org/threedotjs/FFFFFF",
-    description: "Shader backdrop dan eksperimen visual berbasis GPU.",
+    description: "Atmospheric shader backdrop dan efek visual berbasis GPU.",
   },
   {
     name: "Framer Motion",
     label: "Motion UI",
     icon: "https://cdn.simpleicons.org/framer/0055FF",
-    description: "Entrance animation dan micro-interaction untuk React.",
+    description: "Transition, reveal, dan komponen animasi React yang smooth.",
+  },
+  {
+    name: "React Three Fiber",
+    label: "3D React",
+    icon: "https://cdn.simpleicons.org/react/61DAFB",
+    description: "Fondasi untuk scene 3D interaktif di ekosistem React.",
+  },
+  {
+    name: "Theatre.js",
+    label: "Cinematic",
+    icon: "https://cdn.simpleicons.org/javascript/F7DF1E",
+    description: "Timeline direction untuk animasi sinematik dan motion direction.",
+  },
+  {
+    name: "Lenis",
+    label: "Smooth Scroll",
+    icon: "https://cdn.simpleicons.org/scrollreveal/FFCB36",
+    description: "Smooth scrolling untuk pengalaman membaca yang lebih halus.",
   },
   {
     name: "CSS3",
-    label: "Styling",
+    label: "Visual Layer",
     icon: "https://cdn.simpleicons.org/css3/1572B6",
-    description: "Responsive layout, visual polish, dan detail interaction.",
+    description: "Layout, blend mode, keyframes, responsive styling, dan interaction polish.",
+  },
+  {
+    name: "GLSL",
+    label: "Shader",
+    icon: "https://cdn.simpleicons.org/opengl/5586A4",
+    description: "Shader language untuk atmosfer visual, noise, distortion, dan GPU effect.",
+  },
+  {
+    name: "Anime.js",
+    label: "Micro Motion",
+    icon: "https://cdn.simpleicons.org/javascript/F7DF1E",
+    description: "Animation engine untuk micro-interaction dan sequencing ringan.",
+  },
+  {
+    name: "Lottie",
+    label: "Vector Motion",
+    icon: "https://cdn.simpleicons.org/lottie/00DDB3",
+    description: "Vector animation untuk icon, loader, dan motion asset ringan.",
+  },
+  {
+    name: "Vercel",
+    label: "Deployment",
+    icon: "https://cdn.simpleicons.org/vercel/FFFFFF",
+    description: "Hosting, analytics, speed insights, dan deployment pipeline.",
   },
   {
     name: "GitHub",
     label: "Workflow",
     icon: "https://cdn.simpleicons.org/github/FFFFFF",
-    description: "Repository, versioning, dan deployment workflow.",
+    description: "Repository, versioning, dan integrasi deployment otomatis.",
+  },
+  {
+    name: "Figma",
+    label: "Design",
+    icon: "https://cdn.simpleicons.org/figma/F24E1E",
+    description: "Visual planning, layout reference, dan UI design direction.",
   },
 ];
 
@@ -148,8 +199,8 @@ export const projects: Project[] = [
     year: "2026",
     category: "Web Product",
     description:
-      "Deskripsikan project Lumina di sini: masalah yang diselesaikan, fitur utama, peran kamu, dan hasil yang ingin ditonjolkan.",
-    stack: ["React", "TypeScript", "Framer Motion", "GSAP"],
+      "Product interface untuk eksperimen Dlavie: clean layout, motion layer, responsive component, dan arah visual yang siap dikembangkan menjadi website nyata.",
+    stack: ["React", "TypeScript", "Motion UI", "GSAP"],
     href: "#",
     status: "draft",
   },
@@ -158,18 +209,18 @@ export const projects: Project[] = [
     year: "2026",
     category: "Personal Brand",
     description:
-      "Portfolio premium dengan layout editorial, logo technology wall, subtle shader background, smooth scroll, dan struktur konten yang mudah diedit.",
+      "Portfolio interaktif dengan welcome gate, technology wall, project preview, WebGL atmosphere, smooth scroll, dan compact visual rhythm.",
     stack: ["Vite", "React", "Three.js", "Lenis"],
     href: "#",
     status: "draft",
   },
   {
-    title: "Project Name Here",
+    title: "Creative Case Study",
     year: "2026",
     category: "Case Study",
     description:
-      "Ganti dengan project terbaik kamu. Jelaskan konteks, kontribusi teknis, dan dampaknya dalam 1–2 kalimat padat.",
-    stack: ["HTML", "CSS", "JavaScript"],
+      "Slot case study untuk project terbaik berikutnya: fokus pada problem, role, tech decision, visual result, dan dampak terhadap user experience.",
+    stack: ["UI/UX", "Responsive", "Animation", "Performance"],
     href: "#",
     status: "draft",
   },
@@ -178,17 +229,17 @@ export const projects: Project[] = [
 export const experience: ExperienceItem[] = [
   {
     period: "2026 — Now",
-    role: "Developer",
+    role: "Creative Developer",
     company: "Dlavie",
     description:
-      "Isi pengalaman kamu di Dlavie: apa yang kamu bangun, teknologi yang digunakan, dan tanggung jawab utama.",
+      "Membangun identitas digital Dlavie melalui UI engineering, motion language, visual system, dan eksperimen web modern.",
   },
   {
     period: "2025 — 2026",
     role: "Web Development Learner",
     company: "Independent Projects",
     description:
-      "Isi perjalanan belajar kamu: stack yang dikuasai, project latihan, kontribusi, atau pencapaian penting.",
+      "Mengasah fondasi frontend, layout responsive, styling modern, component architecture, dan deployment workflow.",
   },
 ];
 
@@ -200,7 +251,11 @@ export const techStack = [
   "Three.js",
   "Framer Motion",
   "Lenis",
-  "Canvas Particles",
-  "CSS Shaders",
+  "React Three Fiber",
+  "Theatre.js",
+  "GLSL",
+  "Lottie",
+  "Vercel",
   "Responsive UI",
+  "Creative Development",
 ];
