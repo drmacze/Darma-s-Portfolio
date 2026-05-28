@@ -18,14 +18,17 @@ import {
   ArrowUpRight,
   Code2,
   Gauge,
-  Github,
+  GithubIcon,
   Layers3,
   Mail,
   MousePointerClick,
   Orbit,
   Sparkles,
-  Zap,
 } from "lucide-react";
+
+import auroraVertexShader from "./shaders/aurora.vert";
+import auroraFragmentShader from "./shaders/aurora.frag";
+
 import {
   capabilities,
   experience,
@@ -50,6 +53,7 @@ function useReducedMotionPreference() {
 
 function fireBurst(element?: HTMLElement) {
   const rect = element?.getBoundingClientRect();
+
   const origin = rect
     ? {
         x: (rect.left + rect.width / 2) / window.innerWidth,
@@ -58,8 +62,8 @@ function fireBurst(element?: HTMLElement) {
     : { x: 0.5, y: 0.5 };
 
   confetti({
-    particleCount: 42,
-    spread: 54,
+    particleCount: 46,
+    spread: 58,
     startVelocity: 36,
     gravity: 0.82,
     scalar: 0.72,
@@ -86,7 +90,9 @@ function ShaderBackdrop() {
 
     const scene = new THREE.Scene();
     const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
-    const geometry = new THREE.PlaneGeometry(2, 2, 80, 80);
+    const geometry = new THREE.PlaneGeometry(2, 2, 1, 1);
+
+    const mouseTarget = new THREE.Vector2(0.5, 0.5);
 
     const uniforms = {
       uTime: { value: 0 },
@@ -96,74 +102,29 @@ function ShaderBackdrop() {
 
     const material = new THREE.ShaderMaterial({
       uniforms,
+      vertexShader: auroraVertexShader,
+      fragmentShader: auroraFragmentShader,
       transparent: true,
       depthWrite: false,
-      vertexShader: `
-        varying vec2 vUv;
-        uniform float uTime;
-
-        void main() {
-          vUv = uv;
-          vec3 p = position;
-          p.z += sin((p.x + uTime * 0.18) * 4.0) * 0.014;
-          gl_Position = vec4(p, 1.0);
-        }
-      `,
-      fragmentShader: `
-        precision highp float;
-
-        varying vec2 vUv;
-        uniform float uTime;
-        uniform vec2 uMouse;
-        uniform vec2 uResolution;
-
-        float glow(vec2 uv, vec2 pos, float radius) {
-          float d = distance(uv, pos);
-          return smoothstep(radius, radius - 0.38, d);
-        }
-
-        void main() {
-          vec2 uv = vUv;
-          vec2 aspect = vec2(uResolution.x / max(uResolution.y, 1.0), 1.0);
-          vec2 centered = (uv - 0.5) * aspect;
-
-          float drift = sin(uTime * 0.18) * 0.16;
-          float pulse = 0.5 + 0.5 * sin(uTime * 0.85);
-
-          float goldA = glow(centered, vec2(-0.42 + drift, 0.20), 0.75);
-          float goldB = glow(centered, vec2(0.48, -0.28 - drift), 0.68);
-          float cursor = glow(uv, uMouse, 0.34);
-
-          vec3 ink = vec3(0.035, 0.036, 0.038);
-          vec3 champagne = vec3(0.78, 0.62, 0.36);
-          vec3 clay = vec3(0.58, 0.39, 0.28);
-          vec3 ivory = vec3(0.93, 0.89, 0.79);
-
-          float grain = fract(sin(dot(uv * (uTime + 1.0), vec2(12.9898, 78.233))) * 43758.5453) * 0.03;
-
-          vec3 color = ink;
-          color += champagne * goldA * 0.18;
-          color += clay * goldB * 0.14;
-          color += ivory * cursor * (0.05 + pulse * 0.025);
-          color += grain;
-
-          gl_FragColor = vec4(color, 0.96);
-        }
-      `,
+      depthTest: false,
     });
 
-    scene.add(new THREE.Mesh(geometry, material));
+    const mesh = new THREE.Mesh(geometry, material);
+    scene.add(mesh);
 
     const resize = () => {
       const width = window.innerWidth;
       const height = window.innerHeight;
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.7));
+      const pixelRatio = Math.min(window.devicePixelRatio || 1, 1.75);
+
+      renderer.setPixelRatio(pixelRatio);
       renderer.setSize(width, height, false);
-      uniforms.uResolution.value.set(width, height);
+
+      uniforms.uResolution.value.set(width * pixelRatio, height * pixelRatio);
     };
 
     const pointer = (event: PointerEvent) => {
-      uniforms.uMouse.value.set(
+      mouseTarget.set(
         event.clientX / window.innerWidth,
         1 - event.clientY / window.innerHeight,
       );
@@ -172,7 +133,12 @@ function ShaderBackdrop() {
     let frame = 0;
 
     const render = () => {
-      if (!reducedMotion) uniforms.uTime.value += 0.016;
+      if (!reducedMotion) {
+        uniforms.uTime.value += 0.016;
+      }
+
+      uniforms.uMouse.value.lerp(mouseTarget, 0.075);
+
       renderer.render(scene, camera);
       frame = window.requestAnimationFrame(render);
     };
@@ -187,13 +153,15 @@ function ShaderBackdrop() {
       window.cancelAnimationFrame(frame);
       window.removeEventListener("resize", resize);
       window.removeEventListener("pointermove", pointer);
+
+      scene.remove(mesh);
       geometry.dispose();
       material.dispose();
       renderer.dispose();
     };
   }, [reducedMotion]);
 
-  return <canvas ref={canvasRef} className="shader-backdrop" aria-hidden="true" />;
+  return <canvas ref={canvasRef} className="shader-backdrop aurora-shader" aria-hidden="true" />;
 }
 
 type Particle = {
@@ -220,6 +188,7 @@ function AntigravityParticles() {
     const colors = ["198,167,107", "244,239,228", "169,129,99"];
     const particles: Particle[] = [];
     const pointer = { x: -9999, y: -9999 };
+
     let width = 0;
     let height = 0;
     let frame = 0;
@@ -236,6 +205,7 @@ function AntigravityParticles() {
 
     const resize = () => {
       const pixelRatio = Math.min(window.devicePixelRatio || 1, 1.8);
+
       width = window.innerWidth;
       height = window.innerHeight;
 
@@ -247,8 +217,12 @@ function AntigravityParticles() {
       ctx.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
 
       particles.length = 0;
+
       const count = Math.min(74, Math.max(32, Math.floor(width / 24)));
-      for (let i = 0; i < count; i += 1) particles.push(createParticle());
+
+      for (let i = 0; i < count; i += 1) {
+        particles.push(createParticle());
+      }
     };
 
     const movePointer = (event: PointerEvent) => {
@@ -348,6 +322,7 @@ function useMotionSystem() {
     lenis.on("scroll", ScrollTrigger.update);
 
     const ticker = (time: number) => lenis.raf(time * 1000);
+
     gsap.ticker.add(ticker);
     gsap.ticker.lagSmoothing(0);
 
@@ -355,7 +330,11 @@ function useMotionSystem() {
       gsap.utils.toArray<HTMLElement>(".reveal").forEach((element) => {
         gsap.fromTo(
           element,
-          { autoAlpha: 0, y: 34, filter: "blur(12px)" },
+          {
+            autoAlpha: 0,
+            y: 34,
+            filter: "blur(12px)",
+          },
           {
             autoAlpha: 1,
             y: 0,
@@ -454,7 +433,9 @@ function CountUp({ value, suffix = "" }: { value: number; suffix?: string }) {
 
       setDisplay(Math.round(value * eased));
 
-      if (progress < 1) frame = window.requestAnimationFrame(tick);
+      if (progress < 1) {
+        frame = window.requestAnimationFrame(tick);
+      }
     };
 
     frame = window.requestAnimationFrame(tick);
@@ -474,24 +455,27 @@ function MagneticButton({
   href,
   children,
   variant = "ghost",
-  onClick,
   external = false,
 }: {
   href: string;
   children: ReactNode;
   variant?: "primary" | "ghost";
-  onClick?: () => void;
   external?: boolean;
 }) {
   const [{ x, y, s }, api] = useSpring(() => ({
     x: 0,
     y: 0,
     s: 1,
-    config: { mass: 1, tension: 280, friction: 18 },
+    config: {
+      mass: 1,
+      tension: 280,
+      friction: 18,
+    },
   }));
 
   const handleMove = (event: ReactPointerEvent<HTMLAnchorElement>) => {
     const rect = event.currentTarget.getBoundingClientRect();
+
     const relX = event.clientX - rect.left - rect.width / 2;
     const relY = event.clientY - rect.top - rect.height / 2;
 
@@ -503,7 +487,11 @@ function MagneticButton({
   };
 
   const reset = () => {
-    api.start({ x: 0, y: 0, s: 1 });
+    api.start({
+      x: 0,
+      y: 0,
+      s: 1,
+    });
   };
 
   return (
@@ -514,7 +502,6 @@ function MagneticButton({
       onMouseLeave={reset}
       onClick={(event) => {
         fireBurst(event.currentTarget);
-        onClick?.();
       }}
       target={external ? "_blank" : undefined}
       rel={external ? "noreferrer" : undefined}
@@ -552,7 +539,7 @@ function Navbar() {
         ))}
       </nav>
 
-      <span className="engine-badge">VFX ENGINE 0.4</span>
+      <span className="engine-badge">VFX ENGINE 0.5</span>
     </header>
   );
 }
@@ -569,7 +556,10 @@ function Hero() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, ease: "easeOut" }}
         >
-          <p className="eyebrow">{profile.location} / {profile.availability}</p>
+          <p className="eyebrow">
+            {profile.location} / {profile.availability}
+          </p>
+
           <span className="mini-rotator">
             building <RotatingText words={["interfaces", "motion", "systems", "experiences"]} />
           </span>
@@ -602,6 +592,7 @@ function Hero() {
           <MagneticButton href="#workbench" variant="primary">
             Explore the stage <ArrowUpRight size={18} />
           </MagneticButton>
+
           <MagneticButton href={emailHref}>
             Start a project <Mail size={18} />
           </MagneticButton>
@@ -687,9 +678,24 @@ function LiveStats() {
   }, []);
 
   const metrics = [
-    { label: "Local visits", value: visits, suffix: "x", caption: "Kunjungan di browser kamu." },
-    { label: "Projects", value: projects.length, suffix: "", caption: "Project aktif di portfolio." },
-    { label: "Tech engines", value: toolLogos.length, suffix: "", caption: "Visual stack yang tampil." },
+    {
+      label: "Local visits",
+      value: visits,
+      suffix: "x",
+      caption: "Kunjungan di browser kamu.",
+    },
+    {
+      label: "Projects",
+      value: projects.length,
+      suffix: "",
+      caption: "Project aktif di portfolio.",
+    },
+    {
+      label: "Tech engines",
+      value: toolLogos.length,
+      suffix: "",
+      caption: "Visual stack yang tampil.",
+    },
   ];
 
   return (
@@ -740,6 +746,7 @@ function About() {
             <span className="card-icon">
               <PrincipleIcon type={item.icon} />
             </span>
+
             <h3>{item.title}</h3>
             <p>{item.description}</p>
           </button>
@@ -757,16 +764,21 @@ function ProjectDeck() {
     rotateX: 0,
     rotateY: 0,
     scale: 1,
-    config: { mass: 1, tension: 260, friction: 18 },
+    config: {
+      mass: 1,
+      tension: 260,
+      friction: 18,
+    },
   }));
 
   const handleMove = (event: ReactPointerEvent<HTMLElement>) => {
     const rect = event.currentTarget.getBoundingClientRect();
+
     const y = event.clientY - rect.top;
     const x = event.clientX - rect.left;
 
-    const rotateYValue = ((x / rect.width) - 0.5) * 12;
-    const rotateXValue = -((y / rect.height) - 0.5) * 10;
+    const rotateYValue = (x / rect.width - 0.5) * 12;
+    const rotateXValue = -(y / rect.height - 0.5) * 10;
 
     api.start({
       rotateX: rotateXValue,
@@ -776,7 +788,11 @@ function ProjectDeck() {
   };
 
   const reset = () => {
-    api.start({ rotateX: 0, rotateY: 0, scale: 1 });
+    api.start({
+      rotateX: 0,
+      rotateY: 0,
+      scale: 1,
+    });
   };
 
   return (
@@ -825,10 +841,25 @@ function ProjectDeck() {
             <motion.div
               key={activeProject.title}
               className="deck-preview-inner"
-              initial={{ opacity: 0, y: 18, filter: "blur(12px)" }}
-              animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-              exit={{ opacity: 0, y: -18, filter: "blur(12px)" }}
-              transition={{ duration: 0.32, ease: "easeOut" }}
+              initial={{
+                opacity: 0,
+                y: 18,
+                filter: "blur(12px)",
+              }}
+              animate={{
+                opacity: 1,
+                y: 0,
+                filter: "blur(0px)",
+              }}
+              exit={{
+                opacity: 0,
+                y: -18,
+                filter: "blur(12px)",
+              }}
+              transition={{
+                duration: 0.32,
+                ease: "easeOut",
+              }}
             >
               <div className="deck-toolbar">
                 <span />
@@ -839,7 +870,10 @@ function ProjectDeck() {
 
               <div className="deck-main">
                 <div>
-                  <p className="eyebrow">{activeProject.year} / {activeProject.category}</p>
+                  <p className="eyebrow">
+                    {activeProject.year} / {activeProject.category}
+                  </p>
+
                   <h3>{activeProject.title}</h3>
                   <p>{activeProject.description}</p>
                 </div>
@@ -888,10 +922,25 @@ function TechInspector() {
           <AnimatePresence mode="wait">
             <motion.div
               key={activeTool.name}
-              initial={{ opacity: 0, scale: 0.96, filter: "blur(12px)" }}
-              animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
-              exit={{ opacity: 0, scale: 0.96, filter: "blur(12px)" }}
-              transition={{ duration: 0.28, ease: "easeOut" }}
+              initial={{
+                opacity: 0,
+                scale: 0.96,
+                filter: "blur(12px)",
+              }}
+              animate={{
+                opacity: 1,
+                scale: 1,
+                filter: "blur(0px)",
+              }}
+              exit={{
+                opacity: 0,
+                scale: 0.96,
+                filter: "blur(12px)",
+              }}
+              transition={{
+                duration: 0.28,
+                ease: "easeOut",
+              }}
             >
               <img src={activeTool.icon} alt={`${activeTool.name} logo`} />
               <p className="eyebrow">{activeTool.label}</p>
@@ -981,9 +1030,11 @@ function Contact() {
   return (
     <section id="contact" className="contact-section reveal">
       <p className="eyebrow">Contact</p>
+
       <h2>
         Let’s shape Dlavie into a <ShinyText>king-level digital presence.</ShinyText>
       </h2>
+
       <p>
         Kirim foto, detail project, dan copywriting personal kamu. Setelah itu visual system ini bisa dipoles menjadi
         identity portfolio yang matang dan memorable.
@@ -995,7 +1046,7 @@ function Contact() {
         </MagneticButton>
 
         <MagneticButton href={profile.github} external>
-          GitHub <Github size={18} />
+          GitHub <GithubIcon size={18} />
         </MagneticButton>
       </div>
     </section>
@@ -1014,6 +1065,7 @@ function App() {
     <main onPointerMove={handlePointerMove}>
       <ShaderBackdrop />
       <AntigravityParticles />
+
       <div className="noise" aria-hidden="true" />
       <div className="cursor-glow" aria-hidden="true" />
 
@@ -1036,7 +1088,10 @@ function App() {
         type="button"
         onClick={(event) => {
           fireBurst(event.currentTarget);
-          window.scrollTo({ top: 0, behavior: "smooth" });
+          window.scrollTo({
+            top: 0,
+            behavior: "smooth",
+          });
         }}
         aria-label="Back to top"
       >
