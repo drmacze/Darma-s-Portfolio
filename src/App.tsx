@@ -1,3 +1,3 @@
-import DlavieExperience from "./DlavieExperience";
+import DlavieEmeraldExperience from "./DlavieEmeraldExperience";
 
-export default DlavieExperience;
+export default DlavieEmeraldExperience;
