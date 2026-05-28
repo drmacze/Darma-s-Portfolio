@@ -2,6 +2,74 @@
   --stage-blur: blur(24px);
 }
 
+.loading-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 999;
+  display: grid;
+  place-items: center;
+  background:
+    radial-gradient(circle at 20% 20%, rgba(198, 167, 107, 0.14), transparent 26rem),
+    radial-gradient(circle at 80% 70%, rgba(244, 239, 228, 0.07), transparent 22rem),
+    #08090a;
+  color: var(--ivory);
+}
+
+.loading-inner {
+  display: grid;
+  width: min(calc(100% - 40px), 920px);
+  gap: 28px;
+}
+
+.loading-meta,
+.loading-footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  color: var(--gold);
+  font-size: 0.72rem;
+  font-weight: 950;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.loading-title {
+  display: grid;
+  gap: 0;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(4rem, 14vw, 12rem);
+  font-weight: 500;
+  letter-spacing: -0.09em;
+  line-height: 0.82;
+}
+
+.loading-title span {
+  display: block;
+  animation: loading-title-in 1s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.loading-title span:nth-child(2) {
+  color: transparent;
+  -webkit-text-stroke: 1px rgba(244, 239, 228, 0.48);
+  animation-delay: 100ms;
+}
+
+.loading-line {
+  position: relative;
+  overflow: hidden;
+  height: 1px;
+  background: rgba(244, 239, 228, 0.12);
+}
+
+.loading-line::after {
+  position: absolute;
+  inset: 0;
+  content: "";
+  background: linear-gradient(90deg, transparent, rgba(198, 167, 107, 0.98), transparent);
+  transform: translateX(-100%);
+  animation: loading-line 1.15s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
 .stage-hero,
 .hero {
   width: min(calc(100% - 32px), var(--max-width));
@@ -452,14 +520,14 @@
 .visual-ribbon-a {
   left: -18%;
   top: 20%;
-  background: rgba(198, 167, 107, 0.34);
+  background: rgba(var(--project-accent), 0.34);
   animation: visual-ribbon-a 7s ease-in-out infinite;
 }
 
 .visual-ribbon-b {
   right: -18%;
   bottom: 18%;
-  background: rgba(169, 129, 99, 0.28);
+  background: rgba(var(--project-soft), 0.18);
   animation: visual-ribbon-b 8.5s ease-in-out infinite;
 }
 
@@ -468,7 +536,7 @@
   display: block;
   border-radius: 50%;
   background:
-    radial-gradient(circle at 30% 30%, rgba(244, 239, 228, 0.75), rgba(198, 167, 107, 0.2) 42%, transparent 70%);
+    radial-gradient(circle at 30% 30%, rgba(244, 239, 228, 0.75), rgba(var(--project-accent), 0.2) 42%, transparent 70%);
   filter: blur(0.2px);
   opacity: 0.75;
   mix-blend-mode: screen;
@@ -526,12 +594,31 @@
   object-fit: contain;
 }
 
+.visual-identity-mark {
+  position: absolute;
+  right: 26px;
+  top: 26px;
+  display: grid;
+  width: 104px;
+  height: 104px;
+  place-items: center;
+  border: 1px solid rgba(244, 239, 228, 0.12);
+  border-radius: 50%;
+  background: rgba(16, 17, 18, 0.36);
+  color: rgba(244, 239, 228, 0.42);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 2.4rem;
+  letter-spacing: -0.08em;
+  backdrop-filter: blur(18px);
+}
+
 .visual-caption {
   position: absolute;
   left: 22px;
   bottom: 22px;
   display: grid;
   gap: 4px;
+  max-width: min(560px, calc(100% - 44px));
   color: var(--ivory);
 }
 
@@ -548,6 +635,19 @@
   font-size: clamp(1.6rem, 4vw, 3.1rem);
   font-weight: 500;
   letter-spacing: -0.06em;
+}
+
+.signal-field .visual-grid {
+  background-size: 28px 56px;
+  transform: skewY(-4deg);
+}
+
+.cinematic-ribbon .visual-ribbon {
+  height: 42%;
+}
+
+.modular-grid .visual-grid {
+  background-size: 38px 38px;
 }
 
 .deck-preview-inner {
@@ -872,6 +972,26 @@
   letter-spacing: -0.06em;
 }
 
+@keyframes loading-title-in {
+  from {
+    opacity: 0;
+    filter: blur(18px);
+    transform: translateY(0.18em);
+  }
+
+  to {
+    opacity: 1;
+    filter: blur(0);
+    transform: translateY(0);
+  }
+}
+
+@keyframes loading-line {
+  to {
+    transform: translateX(100%);
+  }
+}
+
 @keyframes shine-sweep {
   to {
     background-position: -300% 0;
@@ -1117,6 +1237,11 @@
     border-radius: 22px;
   }
 
+  .loading-meta,
+  .loading-footer {
+    display: grid;
+  }
+
   .deck-preview {
     min-height: 690px;
   }
@@ -1149,6 +1274,12 @@
   .visual-logo img {
     width: 19px;
     height: 19px;
+  }
+
+  .visual-identity-mark {
+    width: 76px;
+    height: 76px;
+    font-size: 1.7rem;
   }
 
   .deck-actions {
