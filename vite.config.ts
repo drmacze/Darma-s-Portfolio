@@ -4,11 +4,6 @@ import glsl from "vite-plugin-glsl";
 
 export default defineConfig({
   plugins: [react(), glsl()],
-  resolve: {
-    alias: {
-      "lucide-react": "/src/lib/lucide-react.tsx",
-    },
-  },
   server: {
     host: true,
   },
