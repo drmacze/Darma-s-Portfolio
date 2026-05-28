@@ -24,7 +24,10 @@ import {
   GithubIcon,
   Layers3,
   Mail,
+  Music2,
   Orbit,
+  Pause,
+  Play,
   Sparkles,
 } from "lucide-react";
 
@@ -49,24 +52,51 @@ gsap.registerPlugin(ScrollTrigger);
 const projectVisualProfiles = [
   {
     label: "Interface System",
-    accent: "198,167,107",
-    soft: "244,239,228",
+    accent: "124,58,237",
+    soft: "245,245,245",
     mark: "UI",
     pattern: "modular-grid",
   },
   {
     label: "Motion Direction",
-    accent: "169,129,99",
-    soft: "198,167,107",
+    accent: "37,99,235",
+    soft: "124,58,237",
     mark: "MX",
     pattern: "cinematic-ribbon",
   },
   {
     label: "Digital Product",
-    accent: "130,123,112",
-    soft: "244,239,228",
+    accent: "94,234,212",
+    soft: "245,245,245",
     mark: "DX",
     pattern: "signal-field",
+  },
+];
+
+const musicTracks = [
+  {
+    title: "Summer Nights",
+    mood: "Welcome / Dream",
+    src: "/audio/music-1.mp3",
+    spotify: "https://open.spotify.com/track/0lYBSQXN6rCTvUZvg9S0lU?si=-jBMT-QjTAWzwTDaC23gwg",
+  },
+  {
+    title: "Night Drive",
+    mood: "Soft Motion",
+    src: "/audio/music-2.mp3",
+    spotify: "https://open.spotify.com/track/3GCdLUSnKSMJhs4Tj6CV3s?si=GK-HqwjJQimT8bBQsqFV7Q",
+  },
+  {
+    title: "Signal Bloom",
+    mood: "Focus Mode",
+    src: "/audio/music-3.mp3",
+    spotify: "https://open.spotify.com/track/1rp2VekrJkaJ71HEaQUwAx?si=VUEDXtG9QqW1db-YdUvJoQ",
+  },
+  {
+    title: "Afterglow",
+    mood: "Portfolio Flow",
+    src: "/audio/music-4.mp3",
+    spotify: "https://open.spotify.com/track/4wCiTliB8X4GioUQW0nupW?si=XWn2hM4MS1agqqIlf7gQMQ",
   },
 ];
 
@@ -75,6 +105,27 @@ function useReducedMotionPreference() {
     if (typeof window === "undefined") return false;
     return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   }, []);
+}
+
+function fadeAudioTo(audio: HTMLAudioElement, targetVolume: number, duration = 650, onDone?: () => void) {
+  const startVolume = audio.volume;
+  const startedAt = performance.now();
+
+  const tick = (now: number) => {
+    const progress = Math.min((now - startedAt) / duration, 1);
+    const eased = 1 - Math.pow(1 - progress, 3);
+
+    audio.volume = startVolume + (targetVolume - startVolume) * eased;
+
+    if (progress < 1) {
+      window.requestAnimationFrame(tick);
+      return;
+    }
+
+    onDone?.();
+  };
+
+  window.requestAnimationFrame(tick);
 }
 
 function registerInteraction(element?: HTMLElement) {
@@ -93,40 +144,243 @@ function registerInteraction(element?: HTMLElement) {
   );
 }
 
-function LoadingScreen({ isVisible }: { isVisible: boolean }) {
+function WelcomeGateway({
+  isVisible,
+  onComplete,
+}: {
+  isVisible: boolean;
+  onComplete: () => void;
+}) {
+  const [isLeaving, setIsLeaving] = useState(false);
+  const touchStartY = useRef<number | null>(null);
+  const hasStarted = useRef(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  const tryStartWelcomeAudio = () => {
+    if (!audioRef.current) {
+      audioRef.current = new Audio("/audio/welcome.mp3");
+      audioRef.current.loop = true;
+      audioRef.current.volume = 0;
+    }
+
+    audioRef.current
+      .play()
+      .then(() => {
+        if (audioRef.current) fadeAudioTo(audioRef.current, 0.28, 520);
+      })
+      .catch(() => {
+        // Browser may block audio until a stronger user gesture. Visual flow still continues.
+      });
+  };
+
+  const enterPortfolio = () => {
+    if (hasStarted.current) return;
+
+    hasStarted.current = true;
+    setIsLeaving(true);
+    tryStartWelcomeAudio();
+
+    window.setTimeout(() => {
+      if (audioRef.current) {
+        fadeAudioTo(audioRef.current, 0, 820, () => {
+          audioRef.current?.pause();
+          audioRef.current = null;
+        });
+      }
+
+      onComplete();
+      window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior });
+    }, 760);
+  };
+
+  useEffect(() => {
+    if (!isVisible) return;
+
+    const handleWheel = (event: WheelEvent) => {
+      if (Math.abs(event.deltaY) < 6) return;
+      event.preventDefault();
+      enterPortfolio();
+    };
+
+    const handlePointerDown = () => {
+      tryStartWelcomeAudio();
+    };
+
+    const handleTouchStart = (event: TouchEvent) => {
+      touchStartY.current = event.touches[0]?.clientY ?? null;
+      tryStartWelcomeAudio();
+    };
+
+    const handleTouchEnd = (event: TouchEvent) => {
+      const start = touchStartY.current;
+      const end = event.changedTouches[0]?.clientY ?? null;
+
+      touchStartY.current = null;
+
+      if (start === null || end === null) return;
+
+      const delta = start - end;
+      if (Math.abs(delta) > 18) enterPortfolio();
+    };
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "ArrowDown" || event.key === " " || event.key === "Enter") {
+        event.preventDefault();
+        enterPortfolio();
+      }
+    };
+
+    window.addEventListener("wheel", handleWheel, { passive: false });
+    window.addEventListener("pointerdown", handlePointerDown);
+    window.addEventListener("touchstart", handleTouchStart);
+    window.addEventListener("touchend", handleTouchEnd);
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      window.removeEventListener("wheel", handleWheel);
+      window.removeEventListener("pointerdown", handlePointerDown);
+      window.removeEventListener("touchstart", handleTouchStart);
+      window.removeEventListener("touchend", handleTouchEnd);
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isVisible]);
+
   return (
     <AnimatePresence>
       {isVisible ? (
-        <motion.div
-          className="loading-screen"
+        <motion.section
+          className={`welcome-gateway ${isLeaving ? "is-leaving" : ""}`}
           initial={{ opacity: 1 }}
-          exit={{
-            opacity: 0,
-            filter: "blur(16px)",
-            transition: { duration: 0.72, ease: [0.16, 1, 0.3, 1] },
-          }}
+          exit={{ opacity: 0, transition: { duration: 0.72, ease: [0.16, 1, 0.3, 1] } }}
         >
-          <div className="loading-inner">
-            <div className="loading-meta">
-              <span>Dlavie Project</span>
-              <span>VFX Engine 0.9</span>
-            </div>
+          <div className="welcome-text-shell">
+            <p className="welcome-eyebrow">Dlavie Interactive Portfolio</p>
 
-            <div className="loading-title">
-              <span>Darma</span>
-              <span>Dlavie</span>
-            </div>
+            <h1>
+              <span>Scroll</span>
+              <span>to enter</span>
+              <span>the system.</span>
+            </h1>
 
-            <div className="loading-line" />
+            <p className="welcome-description">
+              Sebuah ruang digital untuk membaca cara berpikir, desain, motion, dan kualitas teknis Darma sebagai
+              developer. Bersih di awal, imersif setelah kamu masuk.
+            </p>
 
-            <div className="loading-footer">
-              <span>Initializing interface</span>
-              <span>Shader / Motion / System</span>
+            <div className="welcome-scroll-hint">
+              <span />
+              <strong>Scroll down / swipe up</strong>
             </div>
           </div>
-        </motion.div>
+        </motion.section>
       ) : null}
     </AnimatePresence>
+  );
+}
+
+function MusicIsland() {
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [activeTrack, setActiveTrack] = useState(0);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [notice, setNotice] = useState("Music system ready");
+
+  const track = musicTracks[activeTrack];
+
+  const pauseMusic = () => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    fadeAudioTo(audio, 0, 480, () => {
+      audio.pause();
+      setIsPlaying(false);
+      setNotice("Music paused");
+    });
+  };
+
+  const playTrack = (index = activeTrack) => {
+    const nextTrack = musicTracks[index];
+
+    if (!audioRef.current) {
+      audioRef.current = new Audio();
+      audioRef.current.loop = true;
+    }
+
+    const audio = audioRef.current;
+
+    if (!audio.src.includes(nextTrack.src)) {
+      audio.src = nextTrack.src;
+      audio.load();
+    }
+
+    audio.volume = 0;
+
+    audio
+      .play()
+      .then(() => {
+        setActiveTrack(index);
+        setIsPlaying(true);
+        setNotice(`Playing ${nextTrack.title}`);
+        fadeAudioTo(audio, 0.36, 620);
+      })
+      .catch(() => {
+        setActiveTrack(index);
+        setIsPlaying(false);
+        setNotice("Tambahkan file audio lokal atau buka Spotify");
+      });
+  };
+
+  const nextTrack = () => {
+    const nextIndex = (activeTrack + 1) % musicTracks.length;
+
+    if (isPlaying) {
+      pauseMusic();
+      window.setTimeout(() => playTrack(nextIndex), 520);
+      return;
+    }
+
+    setActiveTrack(nextIndex);
+    setNotice(`Selected ${musicTracks[nextIndex].title}`);
+  };
+
+  useEffect(() => {
+    return () => {
+      audioRef.current?.pause();
+    };
+  }, []);
+
+  return (
+    <aside className={`music-island ${isPlaying ? "is-playing" : ""}`}>
+      <div className="music-equalizer" aria-hidden="true">
+        <span />
+        <span />
+        <span />
+      </div>
+
+      <button
+        type="button"
+        className="music-toggle"
+        data-cursor={isPlaying ? "Pause" : "Play"}
+        onClick={() => {
+          if (isPlaying) pauseMusic();
+          else playTrack(activeTrack);
+        }}
+      >
+        {isPlaying ? <Pause size={15} /> : <Play size={15} />}
+      </button>
+
+      <div className="music-copy">
+        <span>{track.title}</span>
+        <strong>{notice}</strong>
+      </div>
+
+      <button type="button" className="music-next" data-cursor="Next" onClick={nextTrack}>
+        Next
+      </button>
+
+      <a className="music-spotify" href={track.spotify} target="_blank" rel="noreferrer" data-cursor="Spotify">
+        Spotify
+      </a>
+    </aside>
   );
 }
 
@@ -236,7 +490,7 @@ function AntigravityParticles() {
     const ctx = canvas?.getContext("2d");
     if (!canvas || !ctx) return;
 
-    const colors = ["198,167,107", "244,239,228", "169,129,99"];
+    const colors = ["124,58,237", "37,99,235", "94,234,212", "245,245,245"];
     const particles: Particle[] = [];
     const pointer = { x: -9999, y: -9999 };
 
@@ -249,8 +503,8 @@ function AntigravityParticles() {
       y: Math.random() * height,
       vx: (Math.random() - 0.5) * 0.28,
       vy: (Math.random() - 0.5) * 0.28,
-      size: 1.2 + Math.random() * 3.4,
-      alpha: 0.12 + Math.random() * 0.28,
+      size: 1.2 + Math.random() * 2.8,
+      alpha: 0.1 + Math.random() * 0.22,
       color: colors[Math.floor(Math.random() * colors.length)],
     });
 
@@ -268,18 +522,13 @@ function AntigravityParticles() {
       ctx.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
       particles.length = 0;
 
-      const count = Math.min(74, Math.max(32, Math.floor(width / 24)));
+      const count = Math.min(62, Math.max(26, Math.floor(width / 28)));
       for (let i = 0; i < count; i += 1) particles.push(createParticle());
     };
 
     const movePointer = (event: PointerEvent) => {
       pointer.x = event.clientX;
       pointer.y = event.clientY;
-    };
-
-    const leavePointer = () => {
-      pointer.x = -9999;
-      pointer.y = -9999;
     };
 
     const draw = () => {
@@ -310,8 +559,8 @@ function AntigravityParticles() {
         particle.y = Math.max(0, Math.min(height, particle.y));
 
         ctx.beginPath();
-        ctx.shadowBlur = 28;
-        ctx.shadowColor = `rgba(${particle.color}, 0.48)`;
+        ctx.shadowBlur = 24;
+        ctx.shadowColor = `rgba(${particle.color}, 0.42)`;
         ctx.fillStyle = `rgba(${particle.color}, ${particle.alpha})`;
         ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
         ctx.fill();
@@ -319,11 +568,10 @@ function AntigravityParticles() {
         for (let nextIndex = index + 1; nextIndex < particles.length; nextIndex += 1) {
           const next = particles[nextIndex];
           const linkDistance = Math.hypot(particle.x - next.x, particle.y - next.y);
-          if (linkDistance > 135) continue;
+          if (linkDistance > 125) continue;
 
           ctx.beginPath();
-          ctx.shadowBlur = 18;
-          ctx.strokeStyle = `rgba(198,167,107, ${(1 - linkDistance / 135) * 0.15})`;
+          ctx.strokeStyle = `rgba(124,58,237, ${(1 - linkDistance / 125) * 0.13})`;
           ctx.lineWidth = 1;
           ctx.moveTo(particle.x, particle.y);
           ctx.lineTo(next.x, next.y);
@@ -340,13 +588,11 @@ function AntigravityParticles() {
 
     window.addEventListener("resize", resize);
     window.addEventListener("pointermove", movePointer);
-    window.addEventListener("pointerleave", leavePointer);
 
     return () => {
       window.cancelAnimationFrame(frame);
       window.removeEventListener("resize", resize);
       window.removeEventListener("pointermove", movePointer);
-      window.removeEventListener("pointerleave", leavePointer);
     };
   }, [reducedMotion]);
 
@@ -409,7 +655,7 @@ function useMotionSystem() {
     if (reducedMotion) return;
 
     const lenis = new Lenis({
-      lerp: 0.07,
+      lerp: 0.065,
       smoothWheel: true,
     });
 
@@ -673,11 +919,7 @@ function ProjectVisualStage({
 
       <div className="visual-logo-cluster">
         {visibleLogos.map((tool, index) => (
-          <span
-            key={tool.name}
-            className="visual-logo"
-            style={{ "--i": index } as CSSProperties}
-          >
+          <span key={tool.name} className="visual-logo" style={{ "--i": index } as CSSProperties}>
             <img src={tool.icon} alt="" loading="lazy" />
           </span>
         ))}
@@ -692,6 +934,25 @@ function ProjectVisualStage({
         <strong>{project.title}</strong>
       </div>
     </div>
+  );
+}
+
+function SignalRail() {
+  return (
+    <section className="signal-rail reveal" aria-label="Portfolio signal">
+      <div className="signal-rail-copy">
+        <p className="eyebrow">System language</p>
+        <h2>
+          Compact sections. Stronger rhythm. Less box, more editorial motion.
+        </h2>
+      </div>
+
+      <div className="signal-track" aria-hidden="true">
+        {[...techStack, ...capabilities, ...techStack].map((item, index) => (
+          <span key={`${item}-${index}`}>{item}</span>
+        ))}
+      </div>
+    </section>
   );
 }
 
@@ -718,7 +979,7 @@ function Navbar() {
         ))}
       </nav>
 
-      <span className="engine-badge">VFX ENGINE 0.9</span>
+      <span className="engine-badge">VFX ENGINE 1.0</span>
     </header>
   );
 }
@@ -858,11 +1119,9 @@ function LiveStats() {
     });
 
     const update = () => setClock(formatter.format(new Date()));
-
     update();
 
     const timer = window.setInterval(update, 1000);
-
     return () => window.clearInterval(timer);
   }, []);
 
@@ -909,7 +1168,7 @@ function About() {
         <p>{profile.longBio}</p>
       </div>
 
-      <div className="principles-grid reveal">
+      <div className="principles-grid reveal compact-grid">
         {visualPrinciples.map((item) => (
           <button
             key={item.title}
@@ -954,13 +1213,10 @@ function ProjectDeck() {
     const y = event.clientY - rect.top;
     const x = event.clientX - rect.left;
 
-    const rotateYValue = (x / rect.width - 0.5) * 12;
-    const rotateXValue = -(y / rect.height - 0.5) * 10;
-
     api.start({
-      rotateX: rotateXValue,
-      rotateY: rotateYValue,
-      scale: 1.018,
+      rotateX: -(y / rect.height - 0.5) * 8,
+      rotateY: (x / rect.width - 0.5) * 10,
+      scale: 1.014,
     });
   };
 
@@ -987,12 +1243,7 @@ function ProjectDeck() {
       return;
     }
 
-    if (delta < 0) {
-      goToProject(activeIndex + 1);
-    } else {
-      goToProject(activeIndex - 1);
-    }
-
+    goToProject(delta < 0 ? activeIndex + 1 : activeIndex - 1);
     registerInteraction(event.currentTarget);
   };
 
@@ -1004,8 +1255,8 @@ function ProjectDeck() {
           Select a project. Feel the interface <RotatingText words={["respond", "tilt", "glow", "move"]} />.
         </h2>
         <p>
-          Project tidak lagi hanya list panjang. Section ini dibuat seperti interactive deck agar pengunjung desktop
-          dan mobile sama-sama bisa klik, tap, swipe, dan eksplorasi.
+          Project dibuat lebih compact, lebih cinematic, dan tetap terasa aktif di mobile melalui tap, swipe, dan
+          animated preview.
         </p>
       </div>
 
@@ -1087,25 +1338,11 @@ function ProjectDeck() {
                 </MagneticButton>
 
                 <div className="project-swipe-controls" aria-label="Project controls">
-                  <button
-                    type="button"
-                    data-cursor="Prev"
-                    onClick={(event) => {
-                      goToProject(activeIndex - 1);
-                      registerInteraction(event.currentTarget);
-                    }}
-                  >
+                  <button type="button" data-cursor="Prev" onClick={() => goToProject(activeIndex - 1)}>
                     Prev
                   </button>
 
-                  <button
-                    type="button"
-                    data-cursor="Next"
-                    onClick={(event) => {
-                      goToProject(activeIndex + 1);
-                      registerInteraction(event.currentTarget);
-                    }}
-                  >
+                  <button type="button" data-cursor="Next" onClick={() => goToProject(activeIndex + 1)}>
                     Next
                   </button>
                 </div>
@@ -1174,15 +1411,7 @@ function TechInspector() {
         </div>
       </div>
 
-      <div className="velocity-strip reveal" aria-hidden="true">
-        <div className="velocity-track">
-          {[...techStack, ...techStack, ...techStack].map((item, index) => (
-            <span key={`${item}-${index}`}>{item}</span>
-          ))}
-        </div>
-      </div>
-
-      <div className="capability-grid reveal">
+      <div className="capability-grid reveal compact-caps">
         {capabilities.map((item) => (
           <span key={item} data-cursor="Skill">
             {item}
@@ -1263,18 +1492,9 @@ function Contact() {
 }
 
 function App() {
-  const reducedMotion = useReducedMotionPreference();
-  const [isLoading, setIsLoading] = useState(true);
+  const [hasEntered, setHasEntered] = useState(false);
 
   useMotionSystem();
-
-  useEffect(() => {
-    const timer = window.setTimeout(() => {
-      setIsLoading(false);
-    }, reducedMotion ? 350 : 1350);
-
-    return () => window.clearTimeout(timer);
-  }, [reducedMotion]);
 
   const handlePointerMove = (event: ReactPointerEvent<HTMLElement>) => {
     document.documentElement.style.setProperty("--cursor-x", `${event.clientX}px`);
@@ -1283,7 +1503,7 @@ function App() {
 
   return (
     <main onPointerMove={handlePointerMove}>
-      <LoadingScreen isVisible={isLoading} />
+      <WelcomeGateway isVisible={!hasEntered} onComplete={() => setHasEntered(true)} />
 
       <ShaderBackdrop />
       <AntigravityParticles />
@@ -1295,6 +1515,7 @@ function App() {
       <Navbar />
       <Hero />
       <LiveStats />
+      <SignalRail />
       <ProjectDeck />
       <TechInspector />
       <About />
@@ -1305,6 +1526,8 @@ function App() {
         <span>© 2026 {profile.name}</span>
         <span>Designed for {profile.brand}</span>
       </footer>
+
+      {hasEntered ? <MusicIsland /> : null}
 
       <Analytics />
       <SpeedInsights />
