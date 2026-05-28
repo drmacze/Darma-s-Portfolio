@@ -39,7 +39,13 @@
 }
 
 .shader-backdrop {
+  background: #08090a;
+}
+
+.aurora-shader {
   opacity: 1;
+  mix-blend-mode: normal;
+  filter: saturate(1.08) contrast(1.04);
 }
 
 .antigravity-canvas,
