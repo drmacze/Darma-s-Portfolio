@@ -64,6 +64,7 @@ void main() {
   float fieldB = fbm(flowB);
 
   float aurora = smoothstep(0.18, 0.98, fieldA + fieldB * 0.48);
+
   float ribbon = smoothstep(
     0.34,
     0.0,
