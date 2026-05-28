@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useRef } from "react";
-import { motion } from "motion/react";
+import { type PointerEvent as ReactPointerEvent, useEffect, useMemo, useRef } from "react";
+import { motion } from "framer-motion";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Lenis from "lenis";
@@ -135,68 +135,130 @@ function ShaderBackdrop() {
   return <canvas ref={canvasRef} className="shader-backdrop" aria-hidden="true" />;
 }
 
+type AmbientParticle = {
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  size: number;
+  alpha: number;
+  color: string;
+};
+
 function ParticlesLayer() {
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const reducedMotion = useReducedMotionPreference();
 
   useEffect(() => {
     if (reducedMotion) return;
 
-    let destroyed = false;
-    let container: { destroy: () => void } | undefined;
+    const canvas = canvasRef.current;
+    const context = canvas?.getContext("2d");
+    if (!canvas || !context) return;
 
-    async function bootParticles() {
-      const [{ tsParticles }, { loadSlim }] = await Promise.all([
-        import("@tsparticles/engine"),
-        import("@tsparticles/slim"),
-      ]);
+    const colors = ["139, 92, 246", "34, 211, 238", "245, 158, 11"];
+    const particles: AmbientParticle[] = [];
+    const pointer = { x: -9999, y: -9999 };
+    let frame = 0;
+    let width = 0;
+    let height = 0;
 
-      await loadSlim(tsParticles);
-      if (destroyed) return;
+    const createParticle = (): AmbientParticle => ({
+      x: Math.random() * width,
+      y: Math.random() * height,
+      vx: (Math.random() - 0.5) * 0.28,
+      vy: (Math.random() - 0.5) * 0.28,
+      size: 1 + Math.random() * 2.4,
+      alpha: 0.18 + Math.random() * 0.34,
+      color: colors[Math.floor(Math.random() * colors.length)],
+    });
 
-      const engine = tsParticles as unknown as {
-        load: (config: { id: string; options: unknown }) => Promise<{ destroy: () => void } | undefined>;
-      };
+    const resize = () => {
+      const pixelRatio = Math.min(window.devicePixelRatio || 1, 1.8);
+      width = window.innerWidth;
+      height = window.innerHeight;
+      canvas.width = Math.floor(width * pixelRatio);
+      canvas.height = Math.floor(height * pixelRatio);
+      canvas.style.width = `${width}px`;
+      canvas.style.height = `${height}px`;
+      context.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
 
-      container = await engine.load({
-        id: "particle-canvas",
-        options: {
-          fullScreen: { enable: false },
-          detectRetina: true,
-          fpsLimit: 60,
-          particles: {
-            number: { value: 42, density: { enable: true, area: 900 } },
-            color: { value: ["#8b5cf6", "#22d3ee", "#f59e0b"] },
-            links: {
-              enable: true,
-              color: "#8b5cf6",
-              opacity: 0.16,
-              distance: 145,
-            },
-            move: {
-              enable: true,
-              speed: 0.35,
-              outModes: { default: "bounce" },
-            },
-            opacity: { value: { min: 0.18, max: 0.55 } },
-            size: { value: { min: 1, max: 3 } },
-          },
-          interactivity: {
-            events: { onHover: { enable: true, mode: "grab" }, resize: { enable: true } },
-            modes: { grab: { distance: 165, links: { opacity: 0.25 } } },
-          },
-        },
+      particles.length = 0;
+      const count = Math.min(58, Math.max(28, Math.floor(width / 30)));
+      for (let index = 0; index < count; index += 1) particles.push(createParticle());
+    };
+
+    const movePointer = (event: PointerEvent) => {
+      pointer.x = event.clientX;
+      pointer.y = event.clientY;
+    };
+
+    const leavePointer = () => {
+      pointer.x = -9999;
+      pointer.y = -9999;
+    };
+
+    const draw = () => {
+      context.clearRect(0, 0, width, height);
+
+      particles.forEach((particle, index) => {
+        const dx = particle.x - pointer.x;
+        const dy = particle.y - pointer.y;
+        const distance = Math.hypot(dx, dy);
+
+        if (distance < 140) {
+          const force = (140 - distance) / 140;
+          particle.vx += (dx / Math.max(distance, 1)) * force * 0.012;
+          particle.vy += (dy / Math.max(distance, 1)) * force * 0.012;
+        }
+
+        particle.x += particle.vx;
+        particle.y += particle.vy;
+        particle.vx *= 0.992;
+        particle.vy *= 0.992;
+
+        if (particle.x < 0 || particle.x > width) particle.vx *= -1;
+        if (particle.y < 0 || particle.y > height) particle.vy *= -1;
+        particle.x = Math.max(0, Math.min(width, particle.x));
+        particle.y = Math.max(0, Math.min(height, particle.y));
+
+        context.beginPath();
+        context.fillStyle = `rgba(${particle.color}, ${particle.alpha})`;
+        context.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
+        context.fill();
+
+        for (let nextIndex = index + 1; nextIndex < particles.length; nextIndex += 1) {
+          const next = particles[nextIndex];
+          const linkDistance = Math.hypot(particle.x - next.x, particle.y - next.y);
+          if (linkDistance > 145) continue;
+
+          context.beginPath();
+          context.strokeStyle = `rgba(139, 92, 246, ${(1 - linkDistance / 145) * 0.14})`;
+          context.lineWidth = 1;
+          context.moveTo(particle.x, particle.y);
+          context.lineTo(next.x, next.y);
+          context.stroke();
+        }
       });
-    }
 
-    bootParticles().catch(() => undefined);
+      frame = window.requestAnimationFrame(draw);
+    };
+
+    resize();
+    draw();
+    window.addEventListener("resize", resize);
+    window.addEventListener("pointermove", movePointer);
+    window.addEventListener("pointerleave", leavePointer);
 
     return () => {
-      destroyed = true;
-      container?.destroy();
+      window.cancelAnimationFrame(frame);
+      window.removeEventListener("resize", resize);
+      window.removeEventListener("pointermove", movePointer);
+      window.removeEventListener("pointerleave", leavePointer);
     };
   }, [reducedMotion]);
 
-  return <div id="particle-canvas" className="particles-layer" aria-hidden="true" />;
+  return <canvas ref={canvasRef} className="particles-layer" aria-hidden="true" />;
 }
 
 function useMotionSystem() {
@@ -505,7 +567,7 @@ function Contact() {
 function App() {
   useMotionSystem();
 
-  const handlePointerMove = (event: React.PointerEvent<HTMLElement>) => {
+  const handlePointerMove = (event: ReactPointerEvent<HTMLElement>) => {
     document.documentElement.style.setProperty("--cursor-x", `${event.clientX}px`);
     document.documentElement.style.setProperty("--cursor-y", `${event.clientY}px`);
   };
