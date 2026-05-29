@@ -1,7 +1,8 @@
+import type { CSSProperties, ReactNode } from "react";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/react";
 import "./dlavie-stable.css";
-import "./dlavie-stable-polish.css";
+import "./dlavie-command.css";
 
 const links = [
   ["Home", "#home"],
@@ -21,8 +22,8 @@ const projects = [
 ] as const;
 
 const skills = [
-  ["HTML", "100"], ["CSS", "98"], ["JavaScript", "99"], ["TypeScript", "95"], ["React", "91"], ["Node.js", "90"],
-  ["UI/UX Design", "97"], ["Animation/Motion", "94"], ["Three.js/WebGL", "90"], ["Backend/API", "88"], ["Database", "89"], ["Vercel", "91"],
+  ["HTML", 100], ["CSS", 98], ["JavaScript", 99], ["TypeScript", 95], ["React", 91], ["Node.js", 90],
+  ["UI/UX Design", 97], ["Animation/Motion", 94], ["Three.js/WebGL", 90], ["Backend/API", 88], ["Database", 89], ["Vercel", 91],
 ] as const;
 
 const journey = [
@@ -44,7 +45,27 @@ function Mark() {
   return <span className="ds-mark" aria-hidden="true" />;
 }
 
-function Section({ id, kicker, title, children }: { id: string; kicker: string; title: string; children: React.ReactNode }) {
+function CommandMenu() {
+  return (
+    <details className="dc-command">
+      <summary aria-label="Open portfolio navigation">
+        <Mark />
+        <span>Dlavie</span>
+        <i />
+      </summary>
+      <nav>
+        {links.map(([label, href], index) => (
+          <a href={href} key={label} style={{ "--delay": `${index * 34}ms` } as CSSProperties}>
+            <small>{String(index + 1).padStart(2, "0")}</small>
+            <strong>{label}</strong>
+          </a>
+        ))}
+      </nav>
+    </details>
+  );
+}
+
+function Section({ id, kicker, title, children }: { id: string; kicker: string; title: string; children: ReactNode }) {
   return <section id={id} className="ds-section"><div className="ds-heading"><span>{kicker}</span><h2>{title}</h2></div>{children}</section>;
 }
 
@@ -52,10 +73,7 @@ export default function DlavieStablePortfolio() {
   return (
     <main className="ds-root">
       <div className="ds-ambient" aria-hidden="true" />
-      <aside className="ds-sidebar">
-        <a className="ds-brand" href="#home"><Mark /><strong>Dlavie</strong></a>
-        <nav>{links.map(([label, href]) => <a key={label} href={href}>{label}</a>)}</nav>
-      </aside>
+      <CommandMenu />
 
       <section id="home" className="ds-hero">
         <div className="ds-hero-copy">
@@ -84,7 +102,15 @@ export default function DlavieStablePortfolio() {
       </Section>
 
       <Section id="skills" kicker="Skill Matrix" title="Programming, interface design, motion, and system thinking.">
-        <div className="ds-skill-grid">{skills.map(([name, value]) => <article key={name}><span>{value}</span><h3>{name}</h3><i style={{ width: `${value}%` }} /></article>)}</div>
+        <div className="dc-skill-grid">
+          {skills.map(([name, value], index) => (
+            <article className="dc-skill-card" key={name} style={{ "--level": value, "--delay": `${index * 65}ms` } as CSSProperties}>
+              <div className="dc-skill-value"><strong>{value}</strong><span>%</span></div>
+              <h3>{name}</h3>
+              <div className="dc-skill-meter"><b /></div>
+            </article>
+          ))}
+        </div>
       </Section>
 
       <Section id="journey" kicker="Career Journey" title="From FGZ XD experiments to building Dlavie Inc. seriously.">
