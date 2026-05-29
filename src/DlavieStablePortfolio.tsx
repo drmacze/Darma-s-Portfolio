@@ -15,9 +15,9 @@ import "./dlavie-real-engine";
 gsap.registerPlugin(ScrollTrigger);
 
 const assets = {
-  portrait: "https://image-link.edgeone.app/1780006998994-xbhs1m.jpg",
-  logo: "https://image-link.edgeone.app/1780007019071-tujwp8.jpg",
-  banner: "https://image-link.edgeone.app/1779988010622-t0qa9o.mp4",
+  portrait: "/images/IMG_2432.jpeg",
+  logo: "/images/IMG_2434.png",
+  banner: "/videos/gemini_generated_video_B60BAD5C.mp4",
 };
 
 const links = [
