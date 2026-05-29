@@ -1,6 +1,7 @@
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/react";
 import "./dlavie-stable.css";
+import "./dlavie-stable-polish.css";
 
 const links = [
   ["Home", "#home"],
