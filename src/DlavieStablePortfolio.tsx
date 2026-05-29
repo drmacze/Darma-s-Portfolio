@@ -8,12 +8,14 @@ import "./dlavie-stable.css";
 import "./dlavie-command.css";
 import "./dlavie-premium-motion.css";
 import "./dlavie-hard-rebuild.css";
+import "./dlavie-text-nav.css";
 
 gsap.registerPlugin(ScrollTrigger);
 
 const assets = {
   portrait: "https://image-link.edgeone.app/1780006998994-xbhs1m.jpg",
   logo: "https://image-link.edgeone.app/1780007019071-tujwp8.jpg",
+  banner: "https://image-link.edgeone.app/1779988010622-t0qa9o.mp4",
 };
 
 const links = [
@@ -57,45 +59,60 @@ function Mark() {
   return <span className="ds-mark" aria-hidden="true" />;
 }
 
-function CommandMenu() {
+function SplitText({ text, mode = "chars" }: { text: string; mode?: "chars" | "words" }) {
+  const parts = mode === "words" ? text.split(" ") : Array.from(text);
   return (
-    <details className="dc-command dh-command">
-      <summary aria-label="Open portfolio navigation">
-        <Mark />
-        <span>Dlavie</span>
-        <i />
-      </summary>
-      <nav>
-        {links.map(([label, href], index) => (
-          <a href={href} key={label} style={{ "--delay": `${index * 34}ms` } as CSSProperties}>
-            <small>{String(index + 1).padStart(2, "0")}</small>
-            <strong>{label}</strong>
-          </a>
-        ))}
-      </nav>
-    </details>
+    <>
+      {parts.map((part, index) => {
+        const content = mode === "words" ? part : part === " " ? "\u00A0" : part;
+        return <span className={mode === "words" ? "dt-word" : "dt-char"} key={`${part}-${index}`} style={{ "--i": index } as CSSProperties}>{content}{mode === "words" ? " " : ""}</span>;
+      })}
+    </>
+  );
+}
+
+function OrbitalNav() {
+  return (
+    <nav className="dt-orbital-nav" aria-label="Portfolio navigation">
+      <a href="#home" className="dt-orb-home"><Mark /><span>Home</span></a>
+      {links.slice(1).map(([label, href], index) => (
+        <a href={href} key={label} style={{ "--i": index } as CSSProperties}>
+          <small>{String(index + 2).padStart(2, "0")}</small>
+          <span>{label}</span>
+        </a>
+      ))}
+    </nav>
   );
 }
 
 function Section({ id, kicker, title, children }: { id: string; kicker: string; title: string; children: ReactNode }) {
-  return <section id={id} className="ds-section pm-section"><div className="ds-heading pm-heading"><span>{kicker}</span><h2>{title}</h2></div>{children}</section>;
+  return (
+    <section id={id} className="ds-section pm-section">
+      <div className="ds-heading pm-heading dt-heading">
+        <span>{kicker}</span>
+        <h2><SplitText text={title} mode="words" /></h2>
+      </div>
+      {children}
+    </section>
+  );
 }
 
 function HeroVisual() {
   return (
-    <div className="dh-hero-visual">
-      <div className="dh-logo-panel">
+    <div className="dh-hero-visual dt-hero-visual">
+      <video className="dt-banner-video" src={assets.banner} autoPlay muted loop playsInline />
+      <div className="dh-logo-panel dt-logo-panel">
         <img src={assets.logo} alt="Dlavie Inc. logo" />
-        <span>Dlavie Inc.</span>
+        <span>Dlavie Project</span>
       </div>
-      <figure className="dh-founder-card">
+      <figure className="dh-founder-card dt-founder-card">
         <img src={assets.portrait} alt="Musthafa Darma Priyanda" />
         <figcaption>
           <strong>Musthafa Darma Priyanda</strong>
           <span>Founder · Frontend Developer</span>
         </figcaption>
       </figure>
-      <div className="dh-status-card">
+      <div className="dh-status-card dt-status-card">
         <span>BUILDING</span>
         <strong>Commerce · Bot · AI</strong>
       </div>
@@ -109,15 +126,14 @@ function useDlavieMotion() {
     if (reduceMotion) return;
 
     const ctx = gsap.context(() => {
-      gsap.fromTo(".ds-hero-copy > *", { y: 34, autoAlpha: 0, filter: "blur(18px)" }, { y: 0, autoAlpha: 1, filter: "blur(0px)", duration: 1.05, ease: "power4.out", stagger: 0.08 });
-      gsap.fromTo(".dh-hero-visual > *", { y: 46, scale: 0.96, autoAlpha: 0, filter: "blur(20px)" }, { y: 0, scale: 1, autoAlpha: 1, filter: "blur(0px)", duration: 1.05, ease: "power4.out", stagger: 0.1, delay: 0.18 });
+      gsap.fromTo(".dt-char", { yPercent: 115, autoAlpha: 0, rotateX: -80, filter: "blur(18px)" }, { yPercent: 0, autoAlpha: 1, rotateX: 0, filter: "blur(0px)", duration: 1.05, ease: "power4.out", stagger: 0.012 });
+      gsap.fromTo(".ds-hero-copy > p, .ds-tags span, .ds-actions a", { y: 30, autoAlpha: 0, filter: "blur(14px)" }, { y: 0, autoAlpha: 1, filter: "blur(0px)", duration: 0.9, ease: "power4.out", stagger: 0.055, delay: 0.18 });
+      gsap.fromTo(".dh-hero-visual > *", { y: 46, scale: 0.96, autoAlpha: 0, filter: "blur(20px)" }, { y: 0, scale: 1, autoAlpha: 1, filter: "blur(0px)", duration: 1.05, ease: "power4.out", stagger: 0.1, delay: 0.22 });
 
       gsap.utils.toArray<HTMLElement>(".pm-section").forEach((section) => {
-        const heading = section.querySelector(".pm-heading");
+        const words = section.querySelectorAll(".dt-word");
         const items = section.querySelectorAll("article, .ds-editorial p, .ds-project-lock, .dc-skill-card, .dh-about-media");
-        if (heading) {
-          gsap.fromTo(heading, { y: 42, autoAlpha: 0, filter: "blur(18px)" }, { y: 0, autoAlpha: 1, filter: "blur(0px)", duration: 0.9, ease: "power4.out", scrollTrigger: { trigger: section, start: "top 78%" } });
-        }
+        gsap.fromTo(words, { yPercent: 90, autoAlpha: 0, filter: "blur(12px)" }, { yPercent: 0, autoAlpha: 1, filter: "blur(0px)", duration: 0.7, ease: "power4.out", stagger: 0.025, scrollTrigger: { trigger: section, start: "top 76%" } });
         gsap.fromTo(items, { y: 34, autoAlpha: 0, filter: "blur(14px)" }, { y: 0, autoAlpha: 1, filter: "blur(0px)", duration: 0.82, ease: "power4.out", stagger: 0.07, scrollTrigger: { trigger: section, start: "top 70%" } });
       });
 
@@ -125,16 +141,6 @@ function useDlavieMotion() {
         const meter = card.querySelector(".dc-skill-meter b");
         const level = Number(card.style.getPropertyValue("--level") || 0);
         gsap.fromTo(meter, { width: "0%" }, { width: `${level}%`, duration: 1.15, ease: "power3.out", scrollTrigger: { trigger: card, start: "top 82%" } });
-      });
-
-      gsap.utils.toArray<HTMLElement>(".ds-project-detail article").forEach((card) => {
-        card.addEventListener("pointermove", (event) => {
-          const rect = card.getBoundingClientRect();
-          const x = ((event.clientX - rect.left) / rect.width - 0.5) * 8;
-          const y = ((event.clientY - rect.top) / rect.height - 0.5) * -8;
-          gsap.to(card, { rotateY: x, rotateX: y, y: -6, duration: 0.35, ease: "power2.out" });
-        });
-        card.addEventListener("pointerleave", () => gsap.to(card, { rotateY: 0, rotateX: 0, y: 0, duration: 0.55, ease: "elastic.out(1, 0.55)" }));
       });
     });
 
@@ -146,16 +152,17 @@ export default function DlavieStablePortfolio() {
   useDlavieMotion();
 
   return (
-    <main className="ds-root pm-root dh-root">
+    <main className="ds-root pm-root dh-root dt-root">
       <DlavieShaderCanvas />
       <div className="ds-ambient" aria-hidden="true" />
-      <CommandMenu />
+      <OrbitalNav />
 
-      <section id="home" className="ds-hero pm-hero dh-hero">
-        <div className="ds-hero-copy dh-hero-copy">
-          <p className="ds-kicker">Founder · Frontend Developer · Creative Web Developer</p>
-          <h1>Designing Dlavie Inc. as a digital ecosystem.</h1>
-          <p>Frontend interfaces, e-commerce systems, WhatsApp automation, and private AI — built with clean design, motion, performance, and product vision.</p>
+      <section id="home" className="ds-hero pm-hero dh-hero dt-hero">
+        <div className="ds-hero-copy dh-hero-copy dt-hero-copy">
+          <p className="ds-kicker dt-kicker"><SplitText text="Founder · Frontend Developer · Creative Web Developer" mode="words" /></p>
+          <h1 className="dt-split-title"><SplitText text="Designing Dlavie Inc. as a digital ecosystem." /></h1>
+          <p className="dt-lead">Frontend interfaces, e-commerce systems, WhatsApp automation, and private AI — built with clean design, motion, performance, and product vision.</p>
+          <div className="dt-text-loop"><span>Dlavie Inc. · Commerce · Automation · Private AI · Motion Interface · </span><span>Dlavie Inc. · Commerce · Automation · Private AI · Motion Interface · </span></div>
           <div className="ds-tags"><span>Founder</span><span>Frontend Developer</span><span>AI & Automation Builder</span><span>Dlavie Inc.</span></div>
           <div className="ds-actions"><a href="#projects">Explore Projects</a><a href="mailto:dlaviecom@gmail.com">Contact Founder</a></div>
         </div>
@@ -201,7 +208,7 @@ export default function DlavieStablePortfolio() {
       </Section>
 
       <section id="contact" className="ds-contact pm-section dh-contact">
-        <span>Contact</span><h2>Let’s build something new, fast, and intelligent.</h2><p>Email or WhatsApp for serious discussion. Instagram for quick connection.</p>
+        <span>Contact</span><h2><SplitText text="Let’s build something new, fast, and intelligent." mode="words" /></h2><p>Email or WhatsApp for serious discussion. Instagram for quick connection.</p>
         <div className="ds-actions"><a href="mailto:dlaviecom@gmail.com">Email</a><a href="https://wa.me/message/DBDX22XYJ6RAJ1">WhatsApp</a><a href="https://github.com/drmacze">GitHub</a><a href="https://www.linkedin.com/in/dlavie-inc-0721bb411">LinkedIn</a></div>
       </section>
       <Analytics /><SpeedInsights />
