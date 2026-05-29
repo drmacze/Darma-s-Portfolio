@@ -7,10 +7,10 @@ type Track = {
 };
 
 const tracks: Track[] = [
-  { title: "Dlavie Music 01", src: "/audio/dlavie-music-1.mp3" },
-  { title: "Dlavie Music 02", src: "/audio/dlavie-music-2.mp3" },
-  { title: "Dlavie Music 03", src: "/audio/dlavie-music-3.mp3" },
-  { title: "Dlavie Music 04", src: "/audio/dlavie-music-4.mp3" },
+  { title: "Music 1", src: "/audio/music-1.mp3" },
+  { title: "Music 2", src: "/audio/music-2.mp3" },
+  { title: "Music 3", src: "/audio/music-3.mp3" },
+  { title: "Music 4", src: "/audio/music-4.mp3" },
 ];
 
 export default function DlavieMusicPlayer() {
@@ -73,7 +73,7 @@ export default function DlavieMusicPlayer() {
       </button>
       <div className="dlavie-music-copy">
         <strong>{isPlaying ? "Now Playing" : "Music"}</strong>
-        <small>{isMissing ? "Upload audio file first" : currentTrack.title}</small>
+        <small>{isMissing ? "File not found" : currentTrack.title}</small>
       </div>
       <button className="dlavie-music-next" type="button" onClick={next} aria-label="Next music track">
         Next
