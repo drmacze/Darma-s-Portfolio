@@ -4,6 +4,7 @@ import { SpeedInsights } from "@vercel/speed-insights/react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import DlavieShaderCanvas from "./DlavieShaderCanvas";
+import DlavieMusicPlayer from "./DlavieMusicPlayer";
 import "./dlavie-stable.css";
 import "./dlavie-command.css";
 import "./dlavie-premium-motion.css";
@@ -144,6 +145,7 @@ export default function DlavieStablePortfolio() {
       <DlavieShaderCanvas />
       <div className="ds-ambient" aria-hidden="true" />
       <OrbitalNav />
+      <DlavieMusicPlayer />
 
       <section id="home" className="ds-hero pm-hero dh-hero dt-hero">
         <div className="ds-hero-copy dh-hero-copy dt-hero-copy">
