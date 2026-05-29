@@ -9,6 +9,7 @@ import "./dlavie-command.css";
 import "./dlavie-premium-motion.css";
 import "./dlavie-hard-rebuild.css";
 import "./dlavie-text-nav.css";
+import "./dlavie-real-engine";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -90,7 +91,7 @@ function Section({ id, kicker, title, children }: { id: string; kicker: string; 
     <section id={id} className="ds-section pm-section">
       <div className="ds-heading pm-heading dt-heading">
         <span>{kicker}</span>
-        <h2><SplitText text={title} mode="words" /></h2>
+        <h2 data-splitting="words"><SplitText text={title} mode="words" /></h2>
       </div>
       {children}
     </section>
@@ -100,13 +101,13 @@ function Section({ id, kicker, title, children }: { id: string; kicker: string; 
 function HeroVisual() {
   return (
     <div className="dh-hero-visual dt-hero-visual">
-      <video className="dt-banner-video" src={assets.banner} autoPlay muted loop playsInline />
+      <video className="dt-banner-video" src={assets.banner} autoPlay muted loop playsInline referrerPolicy="no-referrer" />
       <div className="dh-logo-panel dt-logo-panel">
-        <img src={assets.logo} alt="Dlavie Inc. logo" />
+        <img src={assets.logo} alt="Dlavie Inc. logo" referrerPolicy="no-referrer" />
         <span>Dlavie Project</span>
       </div>
       <figure className="dh-founder-card dt-founder-card">
-        <img src={assets.portrait} alt="Musthafa Darma Priyanda" />
+        <img src={assets.portrait} alt="Musthafa Darma Priyanda" referrerPolicy="no-referrer" />
         <figcaption>
           <strong>Musthafa Darma Priyanda</strong>
           <span>Founder · Frontend Developer</span>
@@ -129,19 +130,6 @@ function useDlavieMotion() {
       gsap.fromTo(".dt-char", { yPercent: 115, autoAlpha: 0, rotateX: -80, filter: "blur(18px)" }, { yPercent: 0, autoAlpha: 1, rotateX: 0, filter: "blur(0px)", duration: 1.05, ease: "power4.out", stagger: 0.012 });
       gsap.fromTo(".ds-hero-copy > p, .ds-tags span, .ds-actions a", { y: 30, autoAlpha: 0, filter: "blur(14px)" }, { y: 0, autoAlpha: 1, filter: "blur(0px)", duration: 0.9, ease: "power4.out", stagger: 0.055, delay: 0.18 });
       gsap.fromTo(".dh-hero-visual > *", { y: 46, scale: 0.96, autoAlpha: 0, filter: "blur(20px)" }, { y: 0, scale: 1, autoAlpha: 1, filter: "blur(0px)", duration: 1.05, ease: "power4.out", stagger: 0.1, delay: 0.22 });
-
-      gsap.utils.toArray<HTMLElement>(".pm-section").forEach((section) => {
-        const words = section.querySelectorAll(".dt-word");
-        const items = section.querySelectorAll("article, .ds-editorial p, .ds-project-lock, .dc-skill-card, .dh-about-media");
-        gsap.fromTo(words, { yPercent: 90, autoAlpha: 0, filter: "blur(12px)" }, { yPercent: 0, autoAlpha: 1, filter: "blur(0px)", duration: 0.7, ease: "power4.out", stagger: 0.025, scrollTrigger: { trigger: section, start: "top 76%" } });
-        gsap.fromTo(items, { y: 34, autoAlpha: 0, filter: "blur(14px)" }, { y: 0, autoAlpha: 1, filter: "blur(0px)", duration: 0.82, ease: "power4.out", stagger: 0.07, scrollTrigger: { trigger: section, start: "top 70%" } });
-      });
-
-      gsap.utils.toArray<HTMLElement>(".dc-skill-card").forEach((card) => {
-        const meter = card.querySelector(".dc-skill-meter b");
-        const level = Number(card.style.getPropertyValue("--level") || 0);
-        gsap.fromTo(meter, { width: "0%" }, { width: `${level}%`, duration: 1.15, ease: "power3.out", scrollTrigger: { trigger: card, start: "top 82%" } });
-      });
     });
 
     return () => ctx.revert();
@@ -159,9 +147,9 @@ export default function DlavieStablePortfolio() {
 
       <section id="home" className="ds-hero pm-hero dh-hero dt-hero">
         <div className="ds-hero-copy dh-hero-copy dt-hero-copy">
-          <p className="ds-kicker dt-kicker"><SplitText text="Founder · Frontend Developer · Creative Web Developer" mode="words" /></p>
-          <h1 className="dt-split-title"><SplitText text="Designing Dlavie Inc. as a digital ecosystem." /></h1>
-          <p className="dt-lead">Frontend interfaces, e-commerce systems, WhatsApp automation, and private AI — built with clean design, motion, performance, and product vision.</p>
+          <p className="ds-kicker dt-kicker" data-splitting="words"><SplitText text="Founder · Frontend Developer · Creative Web Developer" mode="words" /></p>
+          <h1 className="dt-split-title" data-splitting><SplitText text="Designing Dlavie Inc. as a digital ecosystem." /></h1>
+          <p className="dt-lead" data-splitting="words">Frontend interfaces, e-commerce systems, WhatsApp automation, and private AI — built with clean design, motion, performance, and product vision.</p>
           <div className="dt-text-loop"><span>Dlavie Inc. · Commerce · Automation · Private AI · Motion Interface · </span><span>Dlavie Inc. · Commerce · Automation · Private AI · Motion Interface · </span></div>
           <div className="ds-tags"><span>Founder</span><span>Frontend Developer</span><span>AI & Automation Builder</span><span>Dlavie Inc.</span></div>
           <div className="ds-actions"><a href="#projects">Explore Projects</a><a href="mailto:dlaviecom@gmail.com">Contact Founder</a></div>
@@ -172,7 +160,7 @@ export default function DlavieStablePortfolio() {
       <Section id="about" kicker="Founder Identity" title="A one-person digital brand built with ambition, consistency, and product vision.">
         <div className="dh-about-grid">
           <div className="ds-editorial"><p>I am Musthafa Darma Priyanda, Founder and Developer of Dlavie Inc. My programming journey began under the name FGZ XD before evolving into Dlavie Inc., a personal digital brand built by one person with a long-term vision.</p><p>I focus on frontend interfaces, e-commerce systems, WhatsApp automation, and private AI products. My work is driven by consistency, timing, ambition, and long working hours.</p></div>
-          <figure className="dh-about-media"><img src={assets.portrait} alt="Musthafa Darma Priyanda" /><figcaption>Daerah Istimewa Yogyakarta · Dlavie Inc.</figcaption></figure>
+          <figure className="dh-about-media"><img src={assets.portrait} alt="Musthafa Darma Priyanda" referrerPolicy="no-referrer" /><figcaption>Daerah Istimewa Yogyakarta · Dlavie Inc.</figcaption></figure>
         </div>
       </Section>
 
@@ -193,7 +181,7 @@ export default function DlavieStablePortfolio() {
             <article className="dc-skill-card" key={name} style={{ "--level": value, "--delay": `${index * 65}ms` } as CSSProperties}>
               <div className="dc-skill-value"><strong>{value}</strong><span>%</span></div>
               <h3>{name}</h3>
-              <div className="dc-skill-meter"><b /></div>
+              <div className="dc-skill-meter"><b style={{ width: `${value}%` }} /></div>
             </article>
           ))}
         </div>
@@ -208,7 +196,7 @@ export default function DlavieStablePortfolio() {
       </Section>
 
       <section id="contact" className="ds-contact pm-section dh-contact">
-        <span>Contact</span><h2><SplitText text="Let’s build something new, fast, and intelligent." mode="words" /></h2><p>Email or WhatsApp for serious discussion. Instagram for quick connection.</p>
+        <span>Contact</span><h2 data-splitting="words"><SplitText text="Let’s build something new, fast, and intelligent." mode="words" /></h2><p>Email or WhatsApp for serious discussion. Instagram for quick connection.</p>
         <div className="ds-actions"><a href="mailto:dlaviecom@gmail.com">Email</a><a href="https://wa.me/message/DBDX22XYJ6RAJ1">WhatsApp</a><a href="https://github.com/drmacze">GitHub</a><a href="https://www.linkedin.com/in/dlavie-inc-0721bb411">LinkedIn</a></div>
       </section>
       <Analytics /><SpeedInsights />
