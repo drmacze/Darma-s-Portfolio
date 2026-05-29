@@ -7,6 +7,7 @@ import "./styles.css";
 import "./effects.css";
 import "./editorial-reset.css";
 import "./visual-theme.css";
+import "./dlavie-shorts-rebuild.css";
 
 installAudioPolicy();
 installWelcomeKlinkSound();
