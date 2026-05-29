@@ -1,8 +1,14 @@
-import type { CSSProperties, ReactNode } from "react";
+import { useEffect, type CSSProperties, type ReactNode } from "react";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/react";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+import DlavieShaderCanvas from "./DlavieShaderCanvas";
 import "./dlavie-stable.css";
 import "./dlavie-command.css";
+import "./dlavie-premium-motion.css";
+
+gsap.registerPlugin(ScrollTrigger);
 
 const links = [
   ["Home", "#home"],
@@ -66,16 +72,89 @@ function CommandMenu() {
 }
 
 function Section({ id, kicker, title, children }: { id: string; kicker: string; title: string; children: ReactNode }) {
-  return <section id={id} className="ds-section"><div className="ds-heading"><span>{kicker}</span><h2>{title}</h2></div>{children}</section>;
+  return <section id={id} className="ds-section pm-section"><div className="ds-heading pm-heading"><span>{kicker}</span><h2>{title}</h2></div>{children}</section>;
+}
+
+function useDlavieMotion() {
+  useEffect(() => {
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduceMotion) return;
+
+    const ctx = gsap.context(() => {
+      gsap.fromTo(
+        ".ds-hero-copy > *",
+        { y: 34, autoAlpha: 0, filter: "blur(18px)" },
+        { y: 0, autoAlpha: 1, filter: "blur(0px)", duration: 1.05, ease: "power4.out", stagger: 0.08 },
+      );
+
+      gsap.fromTo(
+        ".ds-hero-art",
+        { y: 46, rotateX: 8, autoAlpha: 0, filter: "blur(20px)" },
+        { y: 0, rotateX: 0, autoAlpha: 1, filter: "blur(0px)", duration: 1.2, ease: "power4.out", delay: 0.18 },
+      );
+
+      gsap.utils.toArray<HTMLElement>(".pm-section").forEach((section) => {
+        const heading = section.querySelector(".pm-heading");
+        const items = section.querySelectorAll("article, .ds-editorial p, .ds-project-lock, .dc-skill-card");
+
+        if (heading) {
+          gsap.fromTo(heading, { y: 42, autoAlpha: 0, filter: "blur(18px)" }, {
+            y: 0,
+            autoAlpha: 1,
+            filter: "blur(0px)",
+            duration: 0.9,
+            ease: "power4.out",
+            scrollTrigger: { trigger: section, start: "top 78%" },
+          });
+        }
+
+        gsap.fromTo(items, { y: 34, autoAlpha: 0, filter: "blur(14px)" }, {
+          y: 0,
+          autoAlpha: 1,
+          filter: "blur(0px)",
+          duration: 0.82,
+          ease: "power4.out",
+          stagger: 0.07,
+          scrollTrigger: { trigger: section, start: "top 70%" },
+        });
+      });
+
+      gsap.utils.toArray<HTMLElement>(".dc-skill-card").forEach((card) => {
+        const meter = card.querySelector(".dc-skill-meter b");
+        const level = Number(card.style.getPropertyValue("--level") || 0);
+        gsap.fromTo(meter, { width: "0%" }, {
+          width: `${level}%`,
+          duration: 1.15,
+          ease: "power3.out",
+          scrollTrigger: { trigger: card, start: "top 82%" },
+        });
+      });
+
+      gsap.utils.toArray<HTMLElement>(".ds-project-detail article").forEach((card) => {
+        card.addEventListener("pointermove", (event) => {
+          const rect = card.getBoundingClientRect();
+          const x = ((event.clientX - rect.left) / rect.width - 0.5) * 8;
+          const y = ((event.clientY - rect.top) / rect.height - 0.5) * -8;
+          gsap.to(card, { rotateY: x, rotateX: y, y: -6, duration: 0.35, ease: "power2.out" });
+        });
+        card.addEventListener("pointerleave", () => gsap.to(card, { rotateY: 0, rotateX: 0, y: 0, duration: 0.55, ease: "elastic.out(1, 0.55)" }));
+      });
+    });
+
+    return () => ctx.revert();
+  }, []);
 }
 
 export default function DlavieStablePortfolio() {
+  useDlavieMotion();
+
   return (
-    <main className="ds-root">
+    <main className="ds-root pm-root">
+      <DlavieShaderCanvas />
       <div className="ds-ambient" aria-hidden="true" />
       <CommandMenu />
 
-      <section id="home" className="ds-hero">
+      <section id="home" className="ds-hero pm-hero">
         <div className="ds-hero-copy">
           <p className="ds-kicker">Founder · Frontend Developer · Creative Web Developer</p>
           <h1>Designing Dlavie Inc. as a digital ecosystem.</h1>
@@ -91,18 +170,18 @@ export default function DlavieStablePortfolio() {
       </Section>
 
       <Section id="ecosystem" kicker="Dlavie Ecosystem" title="Commerce, automation, AI, portfolio, and dashboard in one connected direction.">
-        <div className="ds-orbit-grid">{["Commerce", "WhatsApp Bot", "Private AI", "Portfolio", "Admin Dashboard", "Product System"].map((item, index) => <article key={item}><span>0{index + 1}</span><h3>{item}</h3><p>Part of the Dlavie Inc. digital ecosystem.</p></article>)}</div>
+        <div className="ds-orbit-grid pm-card-grid">{["Commerce", "WhatsApp Bot", "Private AI", "Portfolio", "Admin Dashboard", "Product System"].map((item, index) => <article key={item}><span>0{index + 1}</span><h3>{item}</h3><p>Part of the Dlavie Inc. digital ecosystem.</p></article>)}</div>
       </Section>
 
       <Section id="projects" kicker="Selected Projects" title="Three core pillars: commerce, automation, and intelligence.">
-        <div className="ds-project-lock">
+        <div className="ds-project-lock pm-project-lock">
           <div className="ds-project-rail">{[...projects, ...projects].map(([no, title, kind, status], index) => <article key={`${title}-${index}`}><span>{no}</span><h3>{title}</h3><p>{kind}</p><small>{status}</small></article>)}</div>
           <div className="ds-project-detail">{projects.map(([no, title, kind, status, link, text]) => <article key={title}><span>{no} · {status}</span><h3>{title}</h3><small>{kind}</small><p>{text}</p><a href={link}>Open Project</a></article>)}</div>
         </div>
       </Section>
 
       <Section id="skills" kicker="Skill Matrix" title="Programming, interface design, motion, and system thinking.">
-        <div className="dc-skill-grid">
+        <div className="dc-skill-grid pm-skill-grid">
           {skills.map(([name, value], index) => (
             <article className="dc-skill-card" key={name} style={{ "--level": value, "--delay": `${index * 65}ms` } as CSSProperties}>
               <div className="dc-skill-value"><strong>{value}</strong><span>%</span></div>
@@ -121,7 +200,7 @@ export default function DlavieStablePortfolio() {
         <div className="ds-proof-grid">{proof.map(([org, title, date]) => <article key={title}><span>{org}</span><h3>{title}</h3><p>{date}</p></article>)}</div>
       </Section>
 
-      <section id="contact" className="ds-contact">
+      <section id="contact" className="ds-contact pm-section">
         <span>Contact</span><h2>Let’s build something new, fast, and intelligent.</h2><p>Email or WhatsApp for serious discussion. Instagram for quick connection.</p>
         <div className="ds-actions"><a href="mailto:dlaviecom@gmail.com">Email</a><a href="https://wa.me/message/DBDX22XYJ6RAJ1">WhatsApp</a><a href="https://github.com/drmacze">GitHub</a><a href="https://www.linkedin.com/in/dlavie-inc-0721bb411">LinkedIn</a></div>
       </section>
