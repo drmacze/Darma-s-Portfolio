@@ -15,9 +15,14 @@
   --em-radius: 34px;
 }
 
-body { background: #0b0b0c !important; }
+html { scroll-behavior: smooth !important; }
+body { background: #0b0b0c !important; overflow-x: hidden !important; overflow-y: auto !important; }
 
 .em-root {
+  position: relative !important;
+  min-height: 100svh !important;
+  height: auto !important;
+  overflow: visible !important;
   background:
     radial-gradient(circle at 52% -10%, rgba(245, 245, 247, 0.16), transparent 34rem),
     radial-gradient(circle at 12% 58%, rgba(59, 89, 152, 0.18), transparent 34rem),
@@ -27,6 +32,28 @@ body { background: #0b0b0c !important; }
 
 .em-root::before { opacity: .22 !important; filter: saturate(.4) blur(.2px) !important; }
 .em-root::after { opacity: .26 !important; filter: saturate(.45) blur(.4px) !important; }
+
+.em-track {
+  height: auto !important;
+  transform: none !important;
+  transition: none !important;
+}
+
+.em-page,
+.em-page.is-active,
+.em-page.is-before,
+.em-page.is-after {
+  position: relative !important;
+  display: grid !important;
+  min-height: 100svh !important;
+  height: auto !important;
+  overflow: visible !important;
+  opacity: 1 !important;
+  filter: none !important;
+  transform: none !important;
+  padding-top: clamp(110px, 14vh, 150px) !important;
+  padding-bottom: clamp(70px, 10vh, 120px) !important;
+}
 
 .em-particles {
   opacity: .22 !important;
@@ -116,14 +143,18 @@ body { background: #0b0b0c !important; }
   box-shadow: 0 24px 80px rgba(180,196,226,.16), inset 0 1px 0 rgba(255,255,255,.42) !important;
 }
 
-.em-page.is-active .em-copy,
-.em-page.is-active .em-module,
-.em-page.is-active .em-project,
-.em-page.is-active .em-row,
-.em-page.is-active .em-terminal,
-.em-page.is-active .em-contact {
+.em-copy,
+.em-module,
+.em-project,
+.em-row,
+.em-terminal,
+.em-contact {
   animation: dlavie-soft-rise .9s cubic-bezier(.16,1,.3,1) both;
+  animation-timeline: view();
+  animation-range: entry 0% cover 34%;
 }
+
+.em-dots { display: none !important; }
 
 @keyframes dlavie-text-flow { to { background-position: -220% 0; } }
 @keyframes dlavie-line-breathe { 0%,100% { transform: scaleX(.35); opacity:.45; } 50% { transform: scaleX(1); opacity:1; } }
@@ -131,13 +162,14 @@ body { background: #0b0b0c !important; }
 @keyframes dlavie-soft-rise { from { opacity:0; filter:blur(18px); transform:translateY(28px); } to { opacity:1; filter:blur(0); transform:translateY(0); } }
 
 @media (max-width: 980px) {
-  .em-root { overflow: hidden !important; }
-  .em-page {
-    height: 100dvh !important;
-    overflow-y: auto !important;
-    overflow-x: hidden !important;
-    -webkit-overflow-scrolling: touch !important;
-    padding: 88px 16px calc(150px + env(safe-area-inset-bottom)) !important;
+  .em-root { overflow: visible !important; }
+  .em-page,
+  .em-page.is-active,
+  .em-page.is-before,
+  .em-page.is-after {
+    min-height: auto !important;
+    overflow: visible !important;
+    padding: 102px 16px 76px !important;
     align-content: start !important;
   }
   .em-page-meta { top: 72px !important; left: 18px !important; right: 18px !important; }
@@ -145,7 +177,6 @@ body { background: #0b0b0c !important; }
   .em-copy h1 { font-size: clamp(2.8rem, 12vw, 5.6rem) !important; line-height:.9 !important; }
   .em-copy h2, .em-contact h2 { font-size: clamp(2.1rem, 9vw, 4.2rem) !important; line-height:.94 !important; }
   .em-mark-stage { min-height: 240px !important; }
-  .em-project { margin-bottom: 80px !important; }
 }
 
 @media (max-width: 620px) {
@@ -158,7 +189,10 @@ body { background: #0b0b0c !important; }
   .em-nav > button { gap: 8px !important; padding: 0 10px 0 4px !important; }
   .em-nav > button::before { width: 26px; height: 26px; border-radius: 10px; }
   .em-nav > button strong { font-size: .82rem !important; }
-  .em-page { padding: 74px 12px calc(170px + env(safe-area-inset-bottom)) !important; }
+  .em-page,
+  .em-page.is-active,
+  .em-page.is-before,
+  .em-page.is-after { padding: 88px 12px 72px !important; }
   .em-page-meta, .em-dots { display: none !important; }
   .em-copy h1 { font-size: clamp(2.25rem, 11vw, 3.8rem) !important; }
   .em-copy h2, .em-contact h2 { font-size: clamp(2rem, 10vw, 3.35rem) !important; }
