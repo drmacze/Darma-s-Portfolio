@@ -8,7 +8,7 @@ import "./effects.css";
 import "./editorial-reset.css";
 import "./visual-theme.css";
 import "./dlavie-shorts-rebuild.css";
-import "./dlavie-webgl-depth.css";
+import "./dlavie-professional-wow.css";
 import "./dlavie-scroll-effects";
 import "./dlavie-lenis";
 import "./dlavie-interactions";
